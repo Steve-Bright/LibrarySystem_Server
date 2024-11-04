@@ -11,7 +11,7 @@ export const fError = (res, msg, statusCode = 500) => {
 };
 
 export const encode = (payload) => {
-    return bcrypt.hashSync(payload, process.env.SALT)
+    return bcrypt.hashSync(payload, Number(process.env.SALT))
 }
 
 export const decode = (payload, hash) => {
