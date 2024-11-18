@@ -1,6 +1,6 @@
 import mmbook from "../model/mmbook.model.js"
 import engbook from "../model/engbook.model.js"
-import {fMsg, fError} from "../utils/libby.js"
+import {fMsg, fError, paginate} from "../utils/libby.js"
 import {kayinGyiBooks } from "../utils/directories.js"
 
 
@@ -59,6 +59,8 @@ export const addBook = async(req, res, next) => {
             bookFormat = mmbook
         }else if(category == "english"){
             bookFormat = engbook
+        }else{
+            return fError(res, "Wrong category input", 400)
         }
 
         const sameAccNo = await bookFormat.findOne({ accNo, deleted: false})
@@ -133,9 +135,56 @@ export const editBook = async(req, res, next) => {
 
 export const getBook = async(req, res, next) => {
     try{
+        const { category, page }  = req.query;
+        if(!category){
+            return fError(res, "Please provide the category", 400)
+        }
+        let pageNum;
+        let bookFormat;
+        if(category == "myanmar"){
+            bookFormat = mmbook
+        }else if(category == "english"){
+            bookFormat = engbook
+        }else{
+            return fError(res, "Wrong category input", 400)
+        }
 
+        pageNum = page;
+        if(!pageNum){
+            pageNum = page
+        }
+        const books = await paginate(bookFormat, pageNum)
+        fMsg(res, "Books fetched successfully", books, 200)
     }catch(error){
         console.log("get book error " + error)
+        next(error)
+    }
+}
+
+export const deleteBook = async(req, res, next) => {
+    try{
+        const { category, accNo }  = req.query;
+        if(!accNo){
+            return fError(res, "Please enter the accession number", 400)
+        }
+
+        let bookFormat;
+        if(category == "myanmar"){
+            bookFormat = mmbook
+        }else if(category == "english"){
+            bookFormat = engbook
+        }else{
+            return fError(res, "Wrong category input", 400)
+        }
+
+        const deletedBook = await bookFormat.findByIdAndDelete(accNo)
+        if(!deletedBook){
+            return fError(res, "Book not found", 200)
+        }
+        fMsg(res, "Book deleted successfully", deletedBook, 200)
+
+    }catch(error){
+        console.log("delete book error " + error )
         next(error)
     }
 }
