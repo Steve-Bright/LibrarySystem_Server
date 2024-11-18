@@ -37,3 +37,42 @@ export const moveImage = (tempPath, finalPath) => {
     })
     return true;
 }
+
+export const paginate = async (model, filter, page = 1, limit = 10, sortField = null, populate = []) => {
+    try {
+        // Calculate the number of documents to skip
+        const skip = (page - 1) * limit;
+
+        // Get total user count for pagination info
+        const totalItems = await model.countDocuments(filter);
+
+        // Calculate total pages based on total items
+        const totalPages = Math.ceil(totalItems / limit);
+
+        // Query to paginate items from the database
+        let query = model.find(filter).skip(skip).limit(limit);
+
+        if (sortField) {
+            query = query.sort({ [sortField]: -1 }); // Sort by the provided field (descending)
+        }
+
+        // Apply populate if provided
+        if (populate.length > 0) {
+            populate.forEach(pop => {
+                query = query.populate(pop);
+            });
+        }
+
+        // Execute the query and get the items
+        const items = await query;
+
+        return {
+            items,
+            totalItems,
+            totalPages,
+            currentPage: page,
+        };
+    } catch (error) {
+        throw new Error("Error in pagination: " + error.message);
+    }
+};
