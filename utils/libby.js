@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
-import dotenv from "dotenv";
+import path from "path"
+import fs from "fs"
 import jwt from "jsonwebtoken";
 
 export const fMsg = (res, msg, result = {}, statusCode = 200) => {
@@ -28,3 +29,11 @@ export const genToken = (payload) => {
     )
 }
 
+export const moveImage = (tempPath, finalPath) => {
+    console.log("This is new path " + finalPath)
+    fs.rename(tempPath, finalPath, (error) => {
+        console.log("moving image error " + error)
+        return false;
+    })
+    return true;
+}

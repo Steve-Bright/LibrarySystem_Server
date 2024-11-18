@@ -31,7 +31,7 @@ export let validateToken = () => {
   export const isManager = () => {
     return (req, res, next) => {
       const role = req.user.role;
-      if (role != "manager") {
+      if (role != "manager" && role !="root") {
         return next(new Error("You are not a library manager"));
       }
       next();
