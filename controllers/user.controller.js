@@ -20,7 +20,8 @@ export const login = async (req, res) => {
         const toEncrypt = {
             id: user._id,
             userName: user.userName,
-            email: user.email
+            email: user.email,
+            role: user.role
         }
 
         const { password: _, ...userData } = user.toObject();

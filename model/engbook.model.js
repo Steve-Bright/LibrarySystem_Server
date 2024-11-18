@@ -19,18 +19,22 @@ const bookSchema = new mongoose.Schema({
         type: String
     },
     initial: {
-        type: String
+        type: String,
+        required: true
     },
     classNo: {
-        type: Float64Array,
+        type: Number,
         required: true,
-        unique: true,
         index: true
     },
     callNo: {
         type: String,
         required: true,
         unique: true
+    },
+    bookCover: {
+        type: String, 
+        required: true
     },
     sor: {
         type: String,
@@ -45,7 +49,7 @@ const bookSchema = new mongoose.Schema({
     authorThree: {
         type: String
     }, 
-    Other: {
+    other: {
         type: String
     },
     translator: {
@@ -55,7 +59,7 @@ const bookSchema = new mongoose.Schema({
         type: String
     },
     size: {
-        type: Float32Array
+        type: Number
     },
     illustrationType: {
         type: String
@@ -100,17 +104,22 @@ const bookSchema = new mongoose.Schema({
         type: String
     },
     price: {
-        type: Float64Array
+        type: Number
     },
     donor: {
         type: String
     }, 
     catalogOwner: {
         type: String
+    },
+    deleted: {
+        type: Boolean,
+        required: true,
+        default: false
     }
     
 });
 
-const Book = mongoose.model("Book", bookSchema);
+const engbook = mongoose.model("engbook", bookSchema);
 
-export default Book;
+export default engbook;
