@@ -3,6 +3,7 @@ import path from "path"
 import fs from "fs"
 import os from "os"
 import { fileURLToPath } from "url"
+import bodyParser from "body-parser"
 
 import testRoute from "./routes/test.route.js";
 import rootRoute from "./routes/root.route.js";
@@ -36,7 +37,7 @@ if(!fs.existsSync(kayinGyiTemp)){
 const app = express()
 
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.json({limit: "50mb"}));
 
 app.use(function(req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1:5500')

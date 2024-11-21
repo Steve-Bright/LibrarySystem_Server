@@ -29,7 +29,7 @@ export const genToken = (payload) => {
     )
 }
 
-export const moveImage = (tempPath, finalPath) => {
+export const moveFile = (tempPath, finalPath) => {
     console.log("This is new path " + finalPath)
     fs.rename(tempPath, finalPath, (error) => {
         console.log("moving image error " + error)
