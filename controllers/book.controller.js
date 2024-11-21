@@ -1,7 +1,9 @@
 import mmbook from "../model/mmbook.model.js"
 import engbook from "../model/engbook.model.js"
+import deletedbook from "../model/deletedbook.model.js"
 import {fMsg, fError, paginate} from "../utils/libby.js"
-import {kayinGyiBooks } from "../utils/directories.js"
+import {kayinGyiBooks, kayinGyiTemp  } from "../utils/directories.js"
+import {moveFile} from "../utils/libby.js"
 
 
 export const addBook = async(req, res, next) => {
@@ -16,6 +18,7 @@ export const addBook = async(req, res, next) => {
             classNo, 
             callNo, 
             sor, 
+            isbn,
             authorOne, 
             authorTwo, 
             authorThree, 
@@ -59,11 +62,14 @@ export const addBook = async(req, res, next) => {
             bookFormat = mmbook
         }else if(category == "english"){
             bookFormat = engbook
+            if(!isbn){
+                return fError(res, "Need isbn" , 400)
+            }
         }else{
             return fError(res, "Wrong category input", 400)
         }
 
-        const sameAccNo = await bookFormat.findOne({ accNo, deleted: false})
+        const sameAccNo = await bookFormat.findOne({ accNo})
         if(sameAccNo){
             return fError(res, "There is already same duplicate accession number", 400)
         }
@@ -71,6 +77,15 @@ export const addBook = async(req, res, next) => {
         const sameCallNo = await bookFormat.findOne({callNo})
         if(sameCallNo){
             return fError(res, "There is already same call number", 400)
+        }
+
+        const deletedBook = await deletedbook.findOne({category})
+        if(deletedBook){
+            if(deletedBook.accNo != accNo){
+                return fError(res, "Please fill the empty accession number: " + deletedBook.accNo, 400)
+            }else if(deletedBook.accNo === accNo){
+                await deletedBook.deleteOne({accNo})
+            }
         }
 
         const fileName = accNo + "-" + Date.now() + ".png"
@@ -88,6 +103,7 @@ export const addBook = async(req, res, next) => {
             callNo, 
             bookCover,
             sor, 
+            isbn,
             authorOne, 
             authorTwo, 
             authorThree, 
@@ -126,7 +142,122 @@ export const addBook = async(req, res, next) => {
 
 export const editBook = async(req, res, next) => {
     try{
+        const { 
+            category,
+            bookId,
+            accNo, 
+            bookTitle, 
+            subTitle, 
+            parallelTitle, 
+            initial, 
+            classNo, 
+            callNo, 
+            sor, 
+            authorOne, 
+            authorTwo, 
+            authorThree, 
+            Other, 
+            translator, 
+            pagniation, 
+            size, 
+            illustrationType, 
+            seriesTitle, 
+            seriesNo, 
+            includeCD, 
+            subjectHeadings, 
+            edition, 
+            editor, 
+            place, 
+            publisher, 
+            year, 
+            keywords, 
+            summary, 
+            notes, 
+            source, 
+            price, 
+            donor, 
+            catalogOwner
+        } = req.body;
 
+        if(!category){
+            return fError(res, "Need category to edit", 400)
+        }
+
+        if(!bookId){
+            return fError(res, "Need book id to edit", 400);
+        }
+
+        let bookFormat;
+        if(category == "myanmar"){
+            bookFormat = mmbook
+        }else if(category == "english"){
+            bookFormat = engbook
+        }else{
+            return fError(res, "Wrong category input", 400)
+        }
+
+        const book = await bookFormat.findById(bookId);
+        const bookAccNo = book.accNo;
+        if(!book){
+            return fError(res, "Book does not exist", 400)
+        }
+
+        const sameAccNo = await bookFormat.findOne({ accNo})
+        if(sameAccNo){
+            return fError(res, "There is already same duplicate accession number", 400)
+        }
+
+        const sameCallNo = await bookFormat.findOne({callNo})
+        if(sameCallNo){
+            return fError(res, "There is already same call number", 400)
+        }
+        
+        let bookCover;
+        let actualBookCover
+        if(req.file){
+            const fileName = bookAccNo + "-" + Date.now() + ".png"
+            bookCover = "/KayinGyi/books/" + fileName
+            actualBookCover = kayinGyiBooks + fileName;
+        }
+
+        const updatedBook = await bookFormat.findByIdAndUpdate(bookId, {
+            accNo, 
+            bookTitle, 
+            subTitle, 
+            parallelTitle, 
+            initial, 
+            classNo, 
+            callNo,
+            bookCover, 
+            sor, 
+            authorOne, 
+            authorTwo, 
+            authorThree, 
+            Other, 
+            translator, 
+            pagniation, 
+            size, 
+            illustrationType, 
+            seriesTitle, 
+            seriesNo, 
+            includeCD, 
+            subjectHeadings, 
+            edition, 
+            editor, 
+            place, 
+            publisher, 
+            year, 
+            keywords, 
+            summary, 
+            notes, 
+            source, 
+            price, 
+            donor, 
+            catalogOwner
+        }, {new: true})
+
+        fMsg(res, "Book updated successfully", updatedBook, 200)
+        return actualBookCover
     }catch(error){
         console.log("edit book error: " + error)
         next(error)
@@ -136,10 +267,10 @@ export const editBook = async(req, res, next) => {
 export const getBook = async(req, res, next) => {
     try{
         const { category, page }  = req.query;
+        let filter = null;
         if(!category){
             return fError(res, "Please provide the category", 400)
         }
-        let pageNum;
         let bookFormat;
         if(category == "myanmar"){
             bookFormat = mmbook
@@ -149,11 +280,8 @@ export const getBook = async(req, res, next) => {
             return fError(res, "Wrong category input", 400)
         }
 
-        pageNum = page;
-        if(!pageNum){
-            pageNum = page
-        }
-        const books = await paginate(bookFormat, pageNum)
+        
+        const books = await paginate(bookFormat, null, page)
         fMsg(res, "Books fetched successfully", books, 200)
     }catch(error){
         console.log("get book error " + error)
@@ -163,9 +291,9 @@ export const getBook = async(req, res, next) => {
 
 export const deleteBook = async(req, res, next) => {
     try{
-        const { category, accNo }  = req.query;
-        if(!accNo){
-            return fError(res, "Please enter the accession number", 400)
+        const { category, bookId }  = req.query;
+        if(!bookId){
+            return fError(res, "Please enter the book Id", 400)
         }
 
         let bookFormat;
@@ -177,14 +305,24 @@ export const deleteBook = async(req, res, next) => {
             return fError(res, "Wrong category input", 400)
         }
 
-        const deletedBook = await bookFormat.findByIdAndDelete(accNo)
+        const deletedBook = await bookFormat.findByIdAndDelete(bookId)
         if(!deletedBook){
             return fError(res, "Book not found", 200)
         }
+        let accNo = deletedBook.accNo
+        await (new deletedbook({category, accNo})).save()
+         
         fMsg(res, "Book deleted successfully", deletedBook, 200)
 
     }catch(error){
         console.log("delete book error " + error )
         next(error)
+    }
+}
+
+export function moveImage(directory, fileName){
+    let oldPath = kayinGyiTemp + fileName;
+    if(typeof directory == "string"){
+        moveFile(oldPath, directory)
     }
 }
