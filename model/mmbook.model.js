@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 
 const bookSchema = new mongoose.Schema({
+    category: {
+        type: String,
+        default: "myanmar"
+    },
     accNo: {
         type: String,
         required: true,
@@ -111,11 +115,6 @@ const bookSchema = new mongoose.Schema({
     }, 
     catalogOwner: {
         type: String
-    },
-    deleted: {
-        type: Boolean,
-        required: true,
-        default: false
     }
     
 });

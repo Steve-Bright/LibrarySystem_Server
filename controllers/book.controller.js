@@ -266,6 +266,32 @@ export const editBook = async(req, res, next) => {
 
 export const getBook = async(req, res, next) => {
     try{
+        const { category, bookId } = req.query;
+
+        let bookFormat
+        if(category == "myanmar"){
+            bookFormat = mmbook
+        }else if(category == "english"){
+            bookFormat = engbook
+        }else{
+            return fError(res, "Wrong category input", 400)
+        }
+
+        const book = await bookFormat.findById(bookId);
+        if(!book){
+            return fError(res, "There is no such this book!" , 400)
+        }
+
+        fMsg(res, "Book details fetched successfully", book, 200)
+
+    }catch(error){
+        console.log("get detailed book error " + error)
+        next(error)
+    }
+}
+
+export const getAllBooks = async(req, res, next) => {
+    try{
         const { category, page }  = req.query;
         let filter = null;
         if(!category){
@@ -284,7 +310,7 @@ export const getBook = async(req, res, next) => {
         const books = await paginate(bookFormat, null, page)
         fMsg(res, "Books fetched successfully", books, 200)
     }catch(error){
-        console.log("get book error " + error)
+        console.log("get all books error " + error)
         next(error)
     }
 }
