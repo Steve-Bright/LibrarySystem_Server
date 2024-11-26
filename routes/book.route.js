@@ -1,5 +1,5 @@
 import express from "express";
-import { addBook, deleteBook, editBook, getBook, moveImage } from "../controllers/book.controller.js"
+import { addBook, deleteBook, editBook, getAllBooks, getBook, moveImage } from "../controllers/book.controller.js"
 import {  validateToken, isManager } from "../utils/validator.js"
 import { upload, fileName } from "../multerStorage.js"
 
@@ -13,6 +13,7 @@ router.post("/addBook", validateToken(),  upload.single("bookCover"),
 router.post("/editBook", validateToken(), isManager(), upload.single("bookCover"), 
             (req, res, next) => editBook(req, res, next) .then((fileDirectory) => moveImage(fileDirectory, fileName))
             )
+router.get("/getAllBooks", validateToken(), getAllBooks)
 router.get("/getBook", validateToken(), getBook)
 router.delete('/deleteBook', validateToken(), isManager(), deleteBook)
 
