@@ -346,6 +346,46 @@ export const deleteBook = async(req, res, next) => {
     }
 }
 
+export const getLatestAccNo = async(req, res, next) => {
+    try{
+        const category = req.params.category;
+        let bookFormat;
+        if(category == "myanmar"){
+            bookFormat = mmbook
+        }else if(category == "english"){
+            bookFormat = engbook
+        }else{
+            return fError(res, "Wrong category input", 400)
+        }
+
+        let accNo;
+        const deletedBook = await deletedbook.findOne({category})
+        if(deletedBook){
+            accNo = deletedBook.accNo;
+        }else{
+            const latestBook = await bookFormat.findOne().sort({_id: -1})
+            if(latestBook){
+                let number = latestBook.accNo.split("-")
+                number = Number(number[1])+1
+                let totalNumber = 5;
+                let finalNumber = String(number);
+                for(let i = finalNumber.length; i < totalNumber; i++){
+                    finalNumber = "0" + finalNumber;
+                }
+                
+                accNo = `CC-${finalNumber}`;
+            }else{
+                accNo = "CC-00001"
+            }   
+        }
+
+        fMsg(res, "Latest accession number", accNo, 200)
+    }catch(error){
+        console.log("get latest acc no error " + error)
+        next(error)
+    }
+}
+
 export function moveImage(directory, fileName){
     let oldPath = kayinGyiTemp + fileName;
     if(typeof directory == "string"){
