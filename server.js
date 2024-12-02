@@ -11,7 +11,7 @@ import userRoute from "./routes/user.route.js";
 import cookieRoute from "./routes/cookie.route.js"
 import bookRoute from "./routes/book.route.js"
 import connectToMongoDB  from "./config/connectMongoDb.js"
-import {kayinGyiDirectory, kayinGyiBooks, kayinGyiMembers, kayinGyiTemp} from "./utils/directories.js"
+import {kayinGyiDirectory, kayinGyiBooks, kayinGyiMembers, kayinGyiTemp, kayinGyiBooksBarcode, kayinGyiMembersBarcode} from "./utils/directories.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -31,6 +31,14 @@ if(!fs.existsSync(kayinGyiMembers)){
 
 if(!fs.existsSync(kayinGyiTemp)){
     fs.mkdirSync(kayinGyiTemp)
+}
+
+if(!fs.existsSync(kayinGyiBooksBarcode)){
+    fs.mkdirSync(kayinGyiBooksBarcode)
+}
+
+if(!fs.existsSync(kayinGyiMembersBarcode)){
+    fs.mkdirSync(kayinGyiMembersBarcode)
 }
 
 
