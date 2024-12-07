@@ -119,6 +119,9 @@ const bookSchema = new mongoose.Schema({
     }, 
     catalogOwner: {
         type: String
+    },
+    barcode: {
+        type: String
     }
     
 });

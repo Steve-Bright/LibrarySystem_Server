@@ -71,6 +71,9 @@ const memberSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    barcode: {
+        type: String
+    }
 });
 
 export default mongoose.model("Member", memberSchema);

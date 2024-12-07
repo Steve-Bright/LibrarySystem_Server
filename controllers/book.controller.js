@@ -2,7 +2,7 @@ import mmbook from "../model/mmbook.model.js"
 import engbook from "../model/engbook.model.js"
 import deletedbook from "../model/deletedbook.model.js"
 import {fMsg, fError, paginate} from "../utils/libby.js"
-import {kayinGyiBooks, kayinGyiTemp  } from "../utils/directories.js"
+import {kayinGyiBooks, kayinGyiBooksBarcode, kayinGyiTemp  } from "../utils/directories.js"
 import {moveFile} from "../utils/libby.js"
 
 
@@ -50,10 +50,11 @@ export const addBook = async(req, res, next) => {
         }
 
 
-        if(!req.file){
+        if(!req.files.bookCover){
             return fError(res, "Please upload a book cover", 400)
         }
-        if(!req.file.mimetype.startsWith("image")){
+        // console.log("this is thhe req file " + JSON.stringify(req.files))
+        if(!req.files.bookCover[0].mimetype.startsWith("image")){
             return fError(res, "Please upload the image only", 400)
         }
         
@@ -89,8 +90,11 @@ export const addBook = async(req, res, next) => {
         }
 
         const fileName = accNo + "-" + Date.now() + ".png"
+        const barcodeName = accNo + "- barcode -" + Date.now() + ".png"
         const bookCover = "/KayinGyi/books/" + fileName
+        const barcode = "/KayinGyi/booksBarcodes/" + barcodeName
         const actualBookCover = kayinGyiBooks + fileName;
+        const actualBookBarcode = kayinGyiBooksBarcode + barcodeName
 
 
         const newBook = new bookFormat({
@@ -127,13 +131,14 @@ export const addBook = async(req, res, next) => {
             source, 
             price, 
             donor, 
-            catalogOwner
+            catalogOwner,
+            barcode
         });
 
         await newBook.save();
 
         fMsg(res, "Book added succcessfully", newBook, 200)
-        return actualBookCover;
+        return [actualBookCover, actualBookBarcode];
     } catch (error) {
         console.log("add book error: " + error)
         next(error);
@@ -386,9 +391,18 @@ export const getLatestAccNo = async(req, res, next) => {
     }
 }
 
-export function moveImage(directory, fileName){
-    let oldPath = kayinGyiTemp + fileName;
-    if(typeof directory == "string"){
-        moveFile(oldPath, directory)
+export function moveImage(directory, fileNames){
+    for(let i = 0; i < fileNames.length; i++){
+        let oldPath = kayinGyiTemp + fileNames[i]
+        if(typeof directory[i] == "string"){
+            moveFile(oldPath, directory[i])
+        }
     }
+    // for(let singleFile of fileNames){
+    //     let oldPath = kayinGyiTemp + singleFile;
+    //     if(typeof directory == "string"){
+    //         moveFile(oldPath, directory)
+    //     }
+    // }
+    
 }

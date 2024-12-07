@@ -1,7 +1,7 @@
 import multer from 'multer';
 import { kayinGyiTemp } from "./utils/directories.js"
 
-let fileName;
+// let fileName = [];
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -10,8 +10,11 @@ const storage = multer.diskStorage({
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now();
         const accessionNum = req.body.accNo; // Access req.body
-        fileName = accessionNum + '-' + uniqueSuffix;
-        cb(null, fileName);
+        const generatedName  = accessionNum + '-' + uniqueSuffix;
+        // fileName.push(generatedName)
+        if(!req.fileNames) req.fileNames = []
+        req.fileNames.push(generatedName)
+        cb(null, generatedName);
     }
 });
 
@@ -27,4 +30,4 @@ const upload = multer({
 });
 
 // Export the upload middleware and fileName for use in other files
-export { upload, fileName };
+export { upload };
