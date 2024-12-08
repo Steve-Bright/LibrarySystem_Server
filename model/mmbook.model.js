@@ -59,7 +59,7 @@ const bookSchema = new mongoose.Schema({
     translator: {
         type: String
     },
-    pagniation: {
+    pagination: {
         type: String
     },
     size: {

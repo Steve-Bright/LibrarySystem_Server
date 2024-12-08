@@ -14,6 +14,7 @@ const storage = multer.diskStorage({
         // fileName.push(generatedName)
         if(!req.fileNames) req.fileNames = []
         req.fileNames.push(generatedName)
+        console.log("this is request filenames: " + req.fileNames)
         cb(null, generatedName);
     }
 });
@@ -30,4 +31,4 @@ const upload = multer({
 });
 
 // Export the upload middleware and fileName for use in other files
-export { upload };
+export { upload};
