@@ -90,7 +90,7 @@ export const addBook = async(req, res, next) => {
         }
 
         const fileName = accNo + "-" + Date.now() + ".png"
-        const barcodeName = accNo + "- barcode -" + Date.now() + ".png"
+        const barcodeName = accNo + "-barcode-" + Date.now() + ".png"
         const bookCover = "/KayinGyi/books/" + fileName
         const barcode = "/KayinGyi/booksBarcodes/" + barcodeName
         const actualBookCover = kayinGyiBooks + fileName;
@@ -271,7 +271,7 @@ export const editBook = async(req, res, next) => {
 
 export const getBook = async(req, res, next) => {
     try{
-        const { category, bookId } = req.query;
+        const { category, bookId, accNo } = req.query;
 
         let bookFormat
         if(category == "myanmar"){
@@ -281,8 +281,18 @@ export const getBook = async(req, res, next) => {
         }else{
             return fError(res, "Wrong category input", 400)
         }
+        
+        let bookData = {category}
 
-        const book = await bookFormat.findById(bookId);
+        if(bookId){
+            bookData["_id"] = bookId
+        }
+
+        if(accNo){
+            bookData["accNo"] = accNo
+        }
+
+        const book = await bookFormat.findOne(bookData);
         if(!book){
             return fError(res, "There is no such this book!" , 400)
         }
@@ -392,12 +402,15 @@ export const getLatestAccNo = async(req, res, next) => {
 }
 
 export function moveImage(directory, fileNames){
-    for(let i = 0; i < fileNames.length; i++){
-        let oldPath = kayinGyiTemp + fileNames[i]
-        if(typeof directory[i] == "string"){
-            moveFile(oldPath, directory[i])
+    if(fileNames){
+        for(let i = 0; i < fileNames.length; i++){
+            let oldPath = kayinGyiTemp + fileNames[i]
+            if(typeof directory[i] == "string"){
+                moveFile(oldPath, directory[i])
+            }
         }
     }
+    
     // for(let singleFile of fileNames){
     //     let oldPath = kayinGyiTemp + singleFile;
     //     if(typeof directory == "string"){
