@@ -22,9 +22,9 @@ export const addBook = async(req, res, next) => {
             authorOne, 
             authorTwo, 
             authorThree, 
-            Other, 
+            other, 
             translator, 
-            pagniation, 
+            pagination, 
             size, 
             illustrationType, 
             seriesTitle, 
@@ -48,7 +48,6 @@ export const addBook = async(req, res, next) => {
         if(!category || !accNo || !bookTitle || !initial || !classNo || !callNo || !sor){
             return fError(res, "Please enter the required field", 400)
         }
-
 
         if(!req.files.bookCover){
             return fError(res, "Please upload a book cover", 400)
@@ -111,9 +110,9 @@ export const addBook = async(req, res, next) => {
             authorOne, 
             authorTwo, 
             authorThree, 
-            Other, 
+            other, 
             translator, 
-            pagniation, 
+            pagination, 
             size, 
             illustrationType, 
             seriesTitle, 
@@ -158,10 +157,11 @@ export const editBook = async(req, res, next) => {
             classNo, 
             callNo, 
             sor, 
+            isbn,
             authorOne, 
             authorTwo, 
             authorThree, 
-            Other, 
+            other, 
             translator, 
             pagniation, 
             size, 
@@ -219,7 +219,9 @@ export const editBook = async(req, res, next) => {
         
         let bookCover;
         let actualBookCover
+        console.log("this is req files " + JSON.stringify(req.file))
         if(req.file){
+            console.log("boookcover condition is covered")
             const fileName = bookAccNo + "-" + Date.now() + ".png"
             bookCover = "/KayinGyi/books/" + fileName
             actualBookCover = kayinGyiBooks + fileName;
@@ -235,10 +237,11 @@ export const editBook = async(req, res, next) => {
             callNo,
             bookCover, 
             sor, 
+            isbn,
             authorOne, 
             authorTwo, 
             authorThree, 
-            Other, 
+            other, 
             translator, 
             pagniation, 
             size, 
@@ -262,7 +265,7 @@ export const editBook = async(req, res, next) => {
         }, {new: true})
 
         fMsg(res, "Book updated successfully", updatedBook, 200)
-        return actualBookCover
+        return [actualBookCover]
     }catch(error){
         console.log("edit book error: " + error)
         next(error)
