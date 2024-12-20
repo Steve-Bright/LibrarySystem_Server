@@ -139,3 +139,30 @@ export const addMember = async(req, res, next) => {
         next(error)
     }
 }
+
+export const editMember = async(req, res, next) => {
+    try{
+
+    }catch(error){
+
+    }
+}
+
+export const deleteMember = async(req, res, next) => {
+    try{
+        const {memberId} = req.query;
+        if(!memberId){
+            return fError(res, "Please enter the member", 400)
+        }
+
+        const deletedMember = await member.findByIdAndDelete(memberId)
+        if(!deletedMember){
+            return fError(res, "Member to be deleted is not found", 200)
+        }
+
+        fMsg(res, "Member deleted successfully", deletedMember, 200)
+    }catch(error){
+        console.log("delete member error " + error)
+        next(error)
+    }
+}
