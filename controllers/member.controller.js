@@ -1,5 +1,5 @@
 import member from "../model/member.model.js"
-import {fMsg, fError, todayDate, nextYear} from "../utils/libby.js"
+import {fMsg, fError, todayDate, nextYear, paginate} from "../utils/libby.js"
 import { kayinGyiMembers, kayinGyiMembersBarcode, kayinGyiTemp } from "../utils/directories.js"
 import e from "express"
 
@@ -177,6 +177,21 @@ export const getMember = async(req, res, next) => {
         fMsg(res, "Member fetched successfully", memberFound, 200)
     }catch(error){
         console.log("get member error " + error)
+        next(error)
+    }
+}
+
+export const getAllMembers = async(req, res, next) => {
+    try{
+        const {memberType, page } = req.query;
+        let filter = {};
+        if(memberType){
+            filter = {memberType}
+        }
+        const members = await paginate(member, filter, page)
+        fMsg(res, "Members fetched successfully", members, 200)
+    }catch(error){
+        console.log('get all members ' + error)
         next(error)
     }
 }
