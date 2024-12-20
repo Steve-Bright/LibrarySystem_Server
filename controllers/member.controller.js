@@ -143,9 +143,88 @@ export const addMember = async(req, res, next) => {
 
 export const editMember = async(req, res, next) => {
     try{
+        const {
+            memberType, 
+            memberDatabaseId,
+            department,
+            personalId,
+            memberId, 
+            name, 
+            nrc, 
+            gender,
+            phone,
+            email,
+            permanentAddress,
+            currentAddress,
+            note
+        } = req.body
+
+        if(!memberType){
+            return fError(res, "Member type is required")
+        }
+
+        if(!memberDatabaseId){
+            return fError(res, "Member id from _id is required")
+        }
+
+        //becareful here, cuz, if the user just update the photo, there might be error here
+        if(!department && !personalId && !memberId && !name && !nrc && !gender 
+            && !phone && !email && !permanentAddress && !currentAddress && !note){
+                return fError(res, "Please enter at least one variable to update")
+            }
+
+        const memberFound = await member.findById(memberDatabaseId)
+        const memberIdFound = memberFound.memberId;
+        if(!memberFound){
+            return fError(res, "Member is not found", 404)
+        }
+
+        const samePersonalId = await member.findOne({personalId})
+        if(samePersonalId){
+            return fError(res, "There is already duplicate personal id")
+        }
+
+        const sameMemberId = await member.findOne({memberId})
+        if(sameMemberId){
+            return fError(res, "There is already duplicate member id ")
+        }
+
+        const sameNrc = await member.findOne({nrc})
+        if(sameNrc){
+            return fError(res, "There is already duplicate nrc")
+        }
+
+        const sameEmail = await member.findOne({email})
+        if(sameEmail){
+            return fError(res, "There is already same email")
+        }
+
+        const samePhone = await member.findOne({phone})
+        if(samePhone){
+            return fError(res, "There is already same phone number")
+        }
+
+        const updatedMember = await member.findByIdAndUpdate(memberDatabaseId, {
+            memberType, 
+            department,
+            personalId,
+            memberId, 
+            name, 
+            nrc, 
+            gender,
+            phone,
+            email,
+            permanentAddress,
+            currentAddress,
+            note
+        })
+
+        await updatedMember.save();
+        fMsg(res, "Member is created successfully", updatedMember, 200)
 
     }catch(error){
-
+        console.log("edit member error " + error)
+        next(error)
     }
 }
 
