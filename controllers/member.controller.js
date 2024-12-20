@@ -384,3 +384,30 @@ export const toggleBanMember = async(req, res, next) => {
         next(error)
     }
 }
+
+export const extendMembership = async (req, res, next) => {
+    try{
+        const memberDatabaseId = req.params.memberDatabaseId;
+        let today = todayDate()
+        let expiryDate = nextYear();
+        if(!memberDatabaseId){
+            return fError(res, "Member id not found")
+        }
+
+        const memberFound =  await member.findById(memberDatabaseId)
+        let rightNow = new Date()
+        if( rightNow < memberFound.expiryDate){
+            return fError(res, `You can't extend member until ${memberFound.expiryDate}`)
+        }
+        const newMembership = await member.findByIdAndUpdate(memberDatabaseId, {
+            $push: {extendDate: today},
+            expiryDate
+        }, {new: true})
+
+        fMsg(res, "Membership extended successfully", newMembership, 200)
+
+    }catch(error){
+        console.log("extending membership error " + error)
+        next(error)
+    }
+}
