@@ -276,6 +276,14 @@ export const getBook = async(req, res, next) => {
     try{
         const { category, bookId, accNo } = req.query;
 
+        if(!category){
+            return fError(res, "Please specify the category", 200)
+        }else{
+            if(!bookId && !accNo){
+                return fError(res, "Please enter the specific bookId you want to search")
+            }
+        }
+
         let bookFormat
         if(category == "myanmar"){
             bookFormat = mmbook

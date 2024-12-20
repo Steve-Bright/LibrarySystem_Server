@@ -1,6 +1,7 @@
 import member from "../model/member.model.js"
 import {fMsg, fError, todayDate, nextYear} from "../utils/libby.js"
 import { kayinGyiMembers, kayinGyiMembersBarcode, kayinGyiTemp } from "../utils/directories.js"
+import e from "express"
 
 export const addMember = async(req, res, next) => {
     try{
@@ -148,14 +149,46 @@ export const editMember = async(req, res, next) => {
     }
 }
 
+export const getMember = async(req, res, next) => {
+    try{
+        const { memberDatabaseId, memberId, personalId } = req.query;
+
+        if(!memberDatabaseId && !memberId && !personalId){
+            return fError(res, "Please specify the required field")
+        }
+
+        let memberData = { }
+
+        if(memberDatabaseId){
+            memberData["_id"] = memberDatabaseId
+        }
+        if(memberId){
+            memberData["memberId"] = memberId
+        }
+        if(personalId){
+            memberData["personalId"] = personalId
+        }
+
+        const memberFound = await member.findOne(memberData)
+        if(!memberFound){
+            return fError(res, "There is no such member", 404)
+        }
+
+        fMsg(res, "Member fetched successfully", memberFound, 200)
+    }catch(error){
+        console.log("get member error " + error)
+        next(error)
+    }
+}
+
 export const deleteMember = async(req, res, next) => {
     try{
-        const {memberId} = req.query;
-        if(!memberId){
+        const {memberDatabaseId} = req.query;
+        if(!memberDatabaseId){
             return fError(res, "Please enter the member", 400)
         }
 
-        const deletedMember = await member.findByIdAndDelete(memberId)
+        const deletedMember = await member.findByIdAndDelete(memberDatabaseId)
         if(!deletedMember){
             return fError(res, "Member to be deleted is not found", 200)
         }
