@@ -214,3 +214,41 @@ export const deleteMember = async(req, res, next) => {
         next(error)
     }
 }
+
+export const getLatestMemberId = async(req, res, next) => {
+    try{
+        const memberType = req.params.memberType;
+        if(!memberType){
+            return fError(res, "No member type found", 404)
+        }
+        let prefix;
+        switch (memberType){
+            case "teacher": prefix = "T" 
+            break;
+            case "student": prefix = "S"
+            break;
+            case "staff": prefix = "ST"
+            break;
+            default: 
+                return fError(res, "Wrong memberType value")
+        }
+        let memberId;
+        const latestMember = await member.findOne({memberType}).sort({_id: -1})
+        if(latestMember){
+            let number = latestMember.memberId.split("-")
+            number = Number(number[1])+1
+            let totalNumber = 5;
+            let finalNumber = String(number);
+            for(let i = finalNumber.length; i < totalNumber; i++){
+                finalNumber = "0" + finalNumber;
+            }
+            memberId = `${prefix}-${finalNumber}`;
+        }else{
+            memberId = `${prefix}-00001`;
+        }
+        fMsg(res, "Latest Member Id", memberId, 200)
+    }catch(error){
+        console.log("get latest member id error " + error)
+        next(error)
+    }
+}
