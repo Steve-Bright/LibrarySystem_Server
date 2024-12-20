@@ -1,6 +1,22 @@
 import mongoose from "mongoose";
 
 const memberSchema = new mongoose.Schema({
+    memberType: {
+        type: String,
+        enum: ["student", "teacher", "staff"],
+        required: true
+    },
+    department: {
+        type: String,
+        index: true, 
+        enum: ["Chinese", "English"]
+    },
+    personalId: {
+        type: String,
+        required: true,
+        unique: true,
+        index: true 
+    },
     memberId: {
         type: String,
         required: true,
@@ -14,7 +30,6 @@ const memberSchema = new mongoose.Schema({
     },
     nrc: {
         type: String,
-        required: true,
         unique: true
     },
     gender: {
@@ -22,29 +37,12 @@ const memberSchema = new mongoose.Schema({
         enum: ["male", "female"],
         required: true
     },
-    memberType: {
-        type: String,
-        enum: ["student", "teacher", "staff"],
-        required: true
-    },
-    department: {
-        type: String,
-        required: true,
-        index: true, 
-        enum: ["Chinese", "English"]
-    },
-    studentId: {
-        type: String,
-        unique: true,
-        index: true 
-    },
     phone: {
         type: String,
-        unique: true
+        required: true
     },
     email: {
-        type: String,
-        unique: true
+        type: String
     },
     permanentAddress: {
         required: true,
@@ -59,9 +57,11 @@ const memberSchema = new mongoose.Schema({
         type: String
     },
     issueDate: {
+        required: true,
         type: Date,
     },
     expiryDate: {
+        required: true,
         type: Date
     },
     note: {
@@ -72,6 +72,7 @@ const memberSchema = new mongoose.Schema({
         default: false
     },
     barcode: {
+        required: true,
         type: String
     }
 });
