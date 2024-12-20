@@ -60,6 +60,9 @@ const memberSchema = new mongoose.Schema({
         required: true,
         type: Date,
     },
+    extendDate: {
+        type: Date
+    },
     expiryDate: {
         required: true,
         type: Date

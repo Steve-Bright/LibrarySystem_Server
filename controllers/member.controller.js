@@ -1,4 +1,5 @@
 import member from "../model/member.model.js"
+import cron from "node-cron";
 import {fMsg, fError, todayDate, nextYear, paginate} from "../utils/libby.js"
 import { kayinGyiMembers, kayinGyiMembersBarcode, kayinGyiTemp } from "../utils/directories.js"
 import e from "express"
@@ -169,10 +170,10 @@ export const editMember = async(req, res, next) => {
 
         //becareful here, cuz, if the user just update the photo, there might be error here
         if(!department && !personalId && !memberId && !name && !nrc && !gender 
-            && !phone && !email && !permanentAddress && !currentAddress && !note){
+            && !phone && !email && !permanentAddress && !currentAddress && !note && !req.file){
                 return fError(res, "Please enter at least one variable to update")
             }
-
+        
         const memberFound = await member.findById(memberDatabaseId)
         const memberIdFound = memberFound.memberId;
         if(!memberFound){
@@ -204,6 +205,15 @@ export const editMember = async(req, res, next) => {
             return fError(res, "There is already same phone number")
         }
 
+        let fileName;
+        let memberPhoto
+        let actualMemberPhoto
+        if(req.file){
+            fileName = memberIdFound + "-" + Date.now() + ".png"
+            memberPhoto = "/KayinGyi/members/" + fileName
+            actualMemberPhoto = kayinGyiMembers + fileName
+        }
+
         const updatedMember = await member.findByIdAndUpdate(memberDatabaseId, {
             memberType, 
             department,
@@ -216,11 +226,13 @@ export const editMember = async(req, res, next) => {
             email,
             permanentAddress,
             currentAddress,
+            photo: memberPhoto,
             note
-        })
+        }, {new: true})
 
         await updatedMember.save();
         fMsg(res, "Member is created successfully", updatedMember, 200)
+        return [actualMemberPhoto]
 
     }catch(error){
         console.log("edit member error " + error)
@@ -328,6 +340,47 @@ export const getLatestMemberId = async(req, res, next) => {
         fMsg(res, "Latest Member Id", memberId, 200)
     }catch(error){
         console.log("get latest member id error " + error)
+        next(error)
+    }
+}
+
+export const toggleBanMember = async(req, res, next) => {
+    try{
+        const {memberDatabaseId, block} = req.query;
+
+        if(!memberDatabaseId){
+            return fError(res, "Please enter the required field")
+        }
+
+        if(!block){
+            return fError(res, "Please choose whether you ban or not")
+        }
+
+        const memberFound = await member.findById(memberDatabaseId)
+        if(!memberFound){
+            return fError(res, "Member not found")
+        }
+
+        if(memberFound.block == false && block == "false"){
+            return fError(res, "Member is already unbanned")
+        }else if(memberFound.block == true && block == "true"){
+            return fError(res, "Member is already banned")
+        }
+
+        const bannedMember = await member.findByIdAndUpdate(memberDatabaseId, {block}, {new: true})
+        if(bannedMember.block == false){
+            return fMsg(res, "Member is unbanned", bannedMember, 200)
+        }else if(bannedMember.block == true){
+            const job = cron.schedule('0 0 1 * *', async () => {
+                console.log("member is unbanned")
+                await member.findByIdAndUpdate(memberDatabaseId, { block: false });
+                job.stop(); // Stop the cron job after execution
+            });
+            return fMsg(res, "Member is banned", bannedMember, 200)
+        }
+
+    }catch(error){
+        console.log("ban member error" + error)
         next(error)
     }
 }
