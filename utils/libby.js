@@ -76,3 +76,29 @@ export const paginate = async (model, filter, page = 1, limit = 10, sortField = 
         throw new Error("Error in pagination: " + error.message);
     }
 };
+
+export const todayDate = () => {
+    let today = new Date();
+    let dd = String(today.getDate()).padStart(2, '0');
+    let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    let yyyy = today.getFullYear();
+
+    today =  yyyy + "-" + mm + "-" + dd;
+    return Date.parse(today);
+}
+
+export const nextYear = () => {
+    let today = new Date();
+    let dd = String(today.getDate()).padStart(2, '0');
+    let mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    let yyyy = today.getFullYear();
+    yyyy = yyyy + 1;
+
+    if(dd == "29" && mm == "2"){
+        dd = 1
+        mm = 3
+    }
+
+    let nextYear =  yyyy + "-" + mm + "-" + dd;
+    return Date.parse(nextYear);
+}

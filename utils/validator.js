@@ -19,6 +19,20 @@ export let validateToken = () => {
     };
   };
 
+  export const validateBody = (schema) => {
+    return (req, res, next) => {
+      console.log("does validate body work?")
+      let result = schema.validate(req.body);
+  
+      if (result.error) {
+        next(new Error(result.error.details[0].message));
+      } else {
+        next();
+      }
+    };
+  };
+  
+
   export const isRoot = () => {
     return (req, res, next) => {
         const role = req.user.role;

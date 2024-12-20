@@ -221,7 +221,6 @@ export const editBook = async(req, res, next) => {
         let actualBookCover
         console.log("this is req files " + JSON.stringify(req.file))
         if(req.file){
-            console.log("boookcover condition is covered")
             const fileName = bookAccNo + "-" + Date.now() + ".png"
             bookCover = "/KayinGyi/books/" + fileName
             actualBookCover = kayinGyiBooks + fileName;
@@ -275,6 +274,14 @@ export const editBook = async(req, res, next) => {
 export const getBook = async(req, res, next) => {
     try{
         const { category, bookId, accNo } = req.query;
+
+        if(!category){
+            return fError(res, "Please specify the category", 200)
+        }else{
+            if(!bookId && !accNo){
+                return fError(res, "Please enter the specific bookId you want to search")
+            }
+        }
 
         let bookFormat
         if(category == "myanmar"){
@@ -405,7 +412,7 @@ export const getLatestAccNo = async(req, res, next) => {
 }
 
 export function moveImage(directory, fileNames){
-    if(fileNames){
+    if(directory && fileNames){
         for(let i = 0; i < fileNames.length; i++){
             let oldPath = kayinGyiTemp + fileNames[i]
             if(typeof directory[i] == "string"){
