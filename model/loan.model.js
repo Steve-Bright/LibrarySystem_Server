@@ -8,8 +8,13 @@ const loanSchema = new mongoose.Schema({
     },
     bookId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Book",
+        refPath: "bookModel",
         required: true
+    },
+    bookModel: {
+        type: String,
+        required: true,
+        enum: ["engbook", "mmbook"]
     },
     loanDate: {
         type: Date,
@@ -18,7 +23,19 @@ const loanSchema = new mongoose.Schema({
     dueDate: {
         type: Date,
         required: true
+    },
+    duration: {
+        type: String, 
+        required: true
+    },
+    loanStatus: {
+        type: Boolean,
+        default: false
+    },
+    overdue: {
+        type: Boolean,
+        default: false
     }
 });
 
-export default mongoose.model("Loan", loanSchema);
+export default mongoose.model("loan", loanSchema);

@@ -1,4 +1,5 @@
 import member from "../model/member.model.js"
+import bannedMemberModel from "../model/banmember.model.js"
 import cron from "node-cron";
 import {fMsg, fError, todayDate, nextYear, paginate} from "../utils/libby.js"
 import { kayinGyiMembers, kayinGyiMembersBarcode, kayinGyiTemp } from "../utils/directories.js"
@@ -369,13 +370,13 @@ export const toggleBanMember = async(req, res, next) => {
 
         const bannedMember = await member.findByIdAndUpdate(memberDatabaseId, {block}, {new: true})
         if(bannedMember.block == false){
+            await bannedMemberModel.findByIdAndDelete(bannedMember._id)
             return fMsg(res, "Member is unbanned", bannedMember, 200)
         }else if(bannedMember.block == true){
-            const job = cron.schedule('0 0 1 * *', async () => {
-                console.log("member is unbanned")
-                await member.findByIdAndUpdate(memberDatabaseId, { block: false });
-                job.stop(); // Stop the cron job after execution
-            });
+            await bannedMemberModel.create({
+                memberId: bannedMember._id,
+                banUntil: todayDate(30)
+            })
             return fMsg(res, "Member is banned", bannedMember, 200)
         }
 
@@ -408,6 +409,23 @@ export const extendMembership = async (req, res, next) => {
 
     }catch(error){
         console.log("extending membership error " + error)
+        next(error)
+    }
+}
+
+export const checkBannedMembers = async(req, res, next) => {
+    try{
+        const bannedMembers = await bannedMemberModel.find({ banUntil: { $lt: todayDate() } });
+
+        for (const bannedMember of bannedMembers) {
+            await member.findByIdAndUpdate(bannedMember.memberId, { block: false });
+            await bannedMemberModel.findByIdAndDelete(bannedMember._id);
+            console.log(`Member ${bannedMember.memberId} is unbanned`);
+        }
+
+        fMsg(res, "Member banned is checked successfully", bannedMembers, 200)
+    }catch(error){
+        console.log("check banned members error " + error);
         next(error)
     }
 }

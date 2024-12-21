@@ -11,6 +11,7 @@ import userRoute from "./routes/user.route.js";
 import cookieRoute from "./routes/cookie.route.js"
 import bookRoute from "./routes/book.route.js"
 import memberRoute from "./routes/member.route.js"
+import loanRoute from "./routes/loan.route.js"
 import connectToMongoDB  from "./config/connectMongoDb.js"
 import {kayinGyiDirectory, kayinGyiBooks, kayinGyiMembers, kayinGyiTemp, kayinGyiBooksBarcode, kayinGyiMembersBarcode} from "./utils/directories.js"
 
@@ -69,6 +70,7 @@ app.use("/accounts/authentication", userRoute)
 app.use("/cookie", cookieRoute)
 app.use("/book", bookRoute)
 app.use("/member", memberRoute)
+app.use("/loan", loanRoute)
 
 app.use("*", (req, res) => {
     res.status(404).json({ con: false, msg: "Invalid route" });
