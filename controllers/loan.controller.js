@@ -33,6 +33,19 @@ export const addLoan = async(req, res, next) => {
         if(memberFound.block == true){
             return fError(res, "Member is banned, can't lend ")
         }
+
+        if(memberFound.loanBooks == 3){
+            return fError(res, "You cannot loan more than 3 books")
+        }else{
+            if(loanBook.loanStatus == true){
+                return fError(res, "The book is already loaned")
+            }else{
+                loanBook.loanStatus = true
+                memberFound.loanBooks ++;   
+                await memberFound.save();
+                await loanBook.save()
+            }
+        }
         let memberType = memberFound.memberType
 
         let duration; 
@@ -42,13 +55,10 @@ export const addLoan = async(req, res, next) => {
                 duration = "1 week";
                 dueDate = todayDate(7)
                 break;
+            case "staff": 
             case "teacher": 
                 duration =  "2 week"
                 dueDate = todayDate(14)
-                break;
-            case "staff": 
-                duration = "3 week"
-                dueDate = todayDate(21)
                 break;
             default: 
             return fError(res, "Something went wrong with memberType")
@@ -79,19 +89,19 @@ export const addLoan = async(req, res, next) => {
     }
 }
 
-// export const checkLoan = async(req, res, next) => {
-//     try{
-//         const job = cron.schedule('*/2 * * * *', async () => {
-//             // await member.findByIdAndUpdate(memberDatabaseId, { block: false });
-//             const overdueBook = await loanModel.findById(bookLoan._id)
-//             if(todayDate() > overdueBook.dueDate && loanStatus == true){
-//                 overdueBook.overdue = true;
-//                 await overdueBook.save();
-//             }
-//             job.cancel(); // Stop the job after execution
-//         });
-//     }catch(error){
-//         console.log("check loan error " + error);
-//         next(error);
-//     }
-// }
+export const checkLoan = async(req, res, next) => {
+    try{
+
+        const overdueLoans = await loanModel.find({dueDate: {$lt: todayDate()}, loanStatus: true})
+        for(const eachOverdue of overdueLoans){
+            if(eachOverdue.overdue == false){
+                await loanModel.findByIdAndUpdate(eachOverdue._id, {overdue: true})
+            }
+            
+        }
+        fMsg(res, "Overdued loans ", overdueLoans, 200)
+    }catch(error){
+        console.log("check loan error " + error);
+        next(error);
+    }
+}
