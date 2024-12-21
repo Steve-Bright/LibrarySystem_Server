@@ -123,7 +123,6 @@ export const returnLoan = async(req, res, next) => {
 
 export const checkLoan = async(req, res, next) => {
     try{
-
         const overdueLoans = await loanModel.find({dueDate: {$lt: todayDate()}, loanStatus: true})
         for(const eachOverdue of overdueLoans){
             if(eachOverdue.overdue == false){
@@ -135,5 +134,33 @@ export const checkLoan = async(req, res, next) => {
     }catch(error){
         console.log("check loan error " + error);
         next(error);
+    }
+}
+
+export const extendLoan = async(req, res, next) => {
+    try{
+
+    }catch(error){
+        console.log('extend loan error ' + error)
+        next(error)
+    }
+}
+
+export const deleteLoan = async(req, res, next) => {
+    try{
+        const loanId = req.params.loanId;
+        if(!loanId){
+            return fError(res, "Please enter the required field")
+        }
+
+        const deletedLoan = await loanModel.findByIdAndDelete(loanId)
+        if(!deletedLoan){
+            return fError(res, "Loan not found",)
+        }
+
+        fMsg(res, "Loan deleted successfully", deletedLoan, 200)
+    }catch(error){
+        console.log("delete loan error " + error)
+        next(error)
     }
 }
