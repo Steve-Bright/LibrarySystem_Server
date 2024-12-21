@@ -89,6 +89,38 @@ export const addLoan = async(req, res, next) => {
     }
 }
 
+export const returnLoan = async(req, res, next) => {
+    try{
+        const loanId = req.params.loanId;
+        if(!loanId){
+            return fError(res, "Please enter the required field")
+        }
+
+        const loanBook =await loanModel.findById(loanId)
+        if(!loanId){
+            return fError(res, "Loan not found", 404)
+        }
+
+        let bookFormat;
+        if(loanBook.bookModel == "engbook"){
+            bookFormat = engbook
+        }else if(loanBook.bookModel == "mmbook"){
+            bookFormat = mmbook
+        }
+        
+        await bookFormat.findByIdAndUpdate(loanBook.bookId, {loanStatus: false})
+
+        loanBook.loanStatus = false;
+        await loanBook.save();
+
+        fMsg(res, "Book returned successfully", loanBook, 200)
+
+    }catch(error){
+        console.log("return loan error " + error)
+        next(error)
+    }
+}
+
 export const checkLoan = async(req, res, next) => {
     try{
 
