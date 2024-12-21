@@ -420,7 +420,7 @@ export const checkBannedMembers = async(req, res, next) => {
         for (const bannedMember of bannedMembers) {
             await member.findByIdAndUpdate(bannedMember.memberId, { block: false });
             await bannedMemberModel.findByIdAndDelete(bannedMember._id);
-            console.log(`Member ${bannedMember.memberId} is unbanned`);
+            // console.log(`Member ${bannedMember.memberId} is unbanned`);
         }
 
         fMsg(res, "Member banned is checked successfully", bannedMembers, 200)

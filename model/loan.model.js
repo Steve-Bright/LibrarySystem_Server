@@ -4,12 +4,14 @@ const loanSchema = new mongoose.Schema({
     memberId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Member",
-        required: true
+        required: true,
+        index: true
     },
     bookId: {
         type: mongoose.Schema.Types.ObjectId,
         refPath: "bookModel",
-        required: true
+        required: true,
+        index: true
     },
     bookModel: {
         type: String,
@@ -22,7 +24,8 @@ const loanSchema = new mongoose.Schema({
     },
     dueDate: {
         type: Date,
-        required: true
+        required: true,
+        index: true
     },
     duration: {
         type: String, 
@@ -30,11 +33,13 @@ const loanSchema = new mongoose.Schema({
     },
     loanStatus: {
         type: Boolean,
-        default: false
+        default: false,
+        index: true
     },
     overdue: {
         type: Boolean,
-        default: false
+        default: false,
+        index: true
     }
 });
 

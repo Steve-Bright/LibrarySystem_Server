@@ -77,6 +77,11 @@ const memberSchema = new mongoose.Schema({
     barcode: {
         required: true,
         type: String
+    },
+    loanBooks: {
+        type: Number,
+        enum: [0, 1, 2, 3],
+        default: 0
     }
 });
 

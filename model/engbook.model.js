@@ -122,6 +122,10 @@ const bookSchema = new mongoose.Schema({
     },
     barcode: {
         type: String
+    },
+    loanStatus: {
+        type: Boolean,
+        default: false
     }
     
 });
