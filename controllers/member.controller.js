@@ -429,3 +429,47 @@ export const checkBannedMembers = async(req, res, next) => {
         next(error)
     }
 }
+
+export const searchMember = async(req, res, next) => {
+    try{
+        const {memberType, name, memberId, personalId} = req.query;
+
+        if(!memberType && !name && !memberId && !personalId){
+            return fError(res, "Please specify at least one field")
+        }
+        
+        if(memberType){
+            if(memberType!= "teacher" && memberType != "student" && memberType != "staff"){
+                return fError(res, "Wrong memberType values")
+            }
+        }
+
+        let searchFields = {}
+        if(memberType){
+            searchFields["memberType"] = memberType
+        }
+
+        if(name){
+            searchFields["name"] =  { $regex: name, $options: 'i' };
+        }
+
+        if(memberId){
+            searchFields["memberId"] = { $regex: memberId, $options: 'i' };
+        }
+
+        if(personalId){
+            searchFields["personalId"] = { $regex: personalId, $options: 'i' };
+        }
+
+
+        const memberFound = await member.find(searchFields)
+        if(memberFound.length === 0){
+            return fError(res, "Member is not found")
+        }
+
+        fMsg(res, "Member is found", memberFound, 200)
+    }catch(error){
+        console.log("search member error " + error)
+        next(error)
+    }
+}

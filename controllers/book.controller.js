@@ -411,6 +411,58 @@ export const getLatestAccNo = async(req, res, next) => {
     }
 }
 
+export const searchBook = async(req, res, next) => {
+    try{
+
+        const {category, accNo, bookTitle, sor, publisher, classNo} = req.query;
+
+        if(!category){
+            return fError(res, "Please enter  the required field")
+        }
+
+        if(!accNo && !bookTitle && !sor && !publisher && !classNo){
+            return fError(res, "Please enter the specifc fields ")
+        }
+
+        let searchFields = {}
+
+        if(accNo){
+            searchFields["accNo"] = accNo
+        }
+        if(bookTitle){
+            searchFields["bookTitle"] = { $regex: bookTitle, $options: 'i' };
+        }
+        if(sor){
+            searchFields["sor"] = { $regex: sor, $options: 'i' };
+        }
+        if(publisher){
+            searchFields["publisher"] = { $regex: publisher, $options: 'i' };
+        }
+        if(classNo){
+            searchFields["classNo"] = { $regex: classNo, $options: 'i' };
+        }
+
+        let bookFormat;
+        if(category == "myanmar"){
+            bookFormat = mmbook
+        }else if(category == "english"){
+            bookFormat = engbook
+        }else{
+            return fError(res, "Wrong category input", 400)
+        }
+
+        const bookFound = await bookFormat.find(searchFields)
+        if(bookFound.length === 0){
+            return fError(res, "Book not found")
+        }
+        fMsg(res, "This is the book found", bookFound, 200)
+
+    }catch(error){
+        console.log("search book error " + error)
+        next(error)
+    }
+}
+
 export function moveImage(directory, fileNames){
     if(directory && fileNames){
         for(let i = 0; i < fileNames.length; i++){
