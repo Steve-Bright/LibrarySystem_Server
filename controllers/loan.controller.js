@@ -139,6 +139,41 @@ export const checkLoan = async(req, res, next) => {
 
 export const extendLoan = async(req, res, next) => {
     try{
+        const loanId = req.params.loanId
+
+        let loanFound = await loanModel.findById(loanId).populate("memberId", "memberType")
+        if(!loanFound){
+            return fError(res, "Loan is not found", 404)
+        }
+
+        if(todayDate() != loanFound.dueDate && todayDate(1) != loanFound.dueDate && todayDate() < loanFound.dueDate){
+            return fError(res, "You are not allowed to extend before due date")
+        }
+
+        let memberType = loanFound.memberId.memberType;
+        let loanDuration = loanFound.duration.split(" ")
+        let duration;
+        let dueDate;
+        switch (memberType) {
+            case "student": 
+                duration = `${Number(loanDuration[0]) + 1} weeks`;
+                dueDate = todayDate(7)
+                break;
+            case "staff": 
+            case "teacher": 
+                duration = `${Number(loanDuration[0]) + 2} weeks`;
+                dueDate = todayDate(14)
+                break;
+            default: 
+            return fError(res, "Something went wrong with memberType")
+        }
+
+        const extendedLoan = await loanModel.findByIdAndUpdate(loanId, {
+            duration,
+            dueDate
+        })
+
+        fMsg(res, 'Loan extended successfully', extendedLoan, 200)
 
     }catch(error){
         console.log('extend loan error ' + error)
