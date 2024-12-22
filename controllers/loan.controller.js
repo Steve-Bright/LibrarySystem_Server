@@ -164,3 +164,76 @@ export const deleteLoan = async(req, res, next) => {
         next(error)
     }
 }
+
+export const searchLoan = async(req, res, next) => {
+    try{
+        const {accNo, memberId, bookTitle, name, loanDate, dueDate} = req.body;
+
+        if(!accNo && !memberId && !bookTitle && !name && !loanDate && !dueDate) {
+            return fError(res, "Please specify the fields")
+        }
+
+        let memberFields = {};
+        let bookFields = {}
+
+        if(accNo){
+            bookFields["accNo"] = { $regex: accNo, $options: "i" }
+        }
+
+        if(memberId){
+            memberFields["memberId"] = { $regex: memberId, $options: "i" }
+        }
+
+        if(bookTitle){
+            bookFields["bookTitle"] = { $regex: bookTitle, $options: "i" }
+        }
+
+        if(name){
+            memberFields["name"] = { $regex: name, $options: "i" }
+        }
+
+        let combineBooks = [];
+        if(bookFields != {}){
+            let engBooks = await engbook.find(bookFields).exec()
+            let mmBooks = await mmbook.find(bookFields).exec()
+
+            
+            if(engBooks.length > 0){
+                for(let eachEngBook of engBooks){
+                    combineBooks.push(eachEngBook._id)
+                }
+            }
+
+            if(mmBooks.length > 0){
+                for(let eachMmBook of mmBooks){
+                    combineBooks.push(eachMmBook._id)
+                }
+            }
+
+        }
+
+        let memberFound;
+        let memberIds = []
+        if(memberFields != {}){
+            memberFound = await member.find(memberFields).exec()
+            for(let eachMember of memberFound){
+                memberIds.push(eachMember)
+            }
+        }
+        let loanQuery = {};
+        if (combineBooks.length > 0) {
+            loanQuery["bookId"] = { $in: combineBooks };
+        }
+        if (memberIds.length > 0) {
+            loanQuery["memberId"] = { $in: memberIds };
+        }
+
+        const loans = await loanModel.find(loanQuery).exec();
+
+        fMsg(res, "This is the loan you searched", loans, 200)
+        
+    }catch(error){
+        console.log("search loan error " + error)
+        next(error)
+    }
+}
