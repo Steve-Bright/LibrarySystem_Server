@@ -11,6 +11,10 @@ const memberSchema = new mongoose.Schema({
         index: true, 
         enum: ["Chinese", "English"]
     },
+    grade: {
+        type: String,
+        index: true,
+    },
     personalId: {
         type: String,
         required: true,

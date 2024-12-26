@@ -10,6 +10,7 @@ export const addMember = async(req, res, next) => {
         const {
             memberType, 
             department,
+            grade,
             personalId,
             memberId, 
             name, 
@@ -41,6 +42,10 @@ export const addMember = async(req, res, next) => {
 
             if(!email){
                 return fError(res, "Please enter the email")
+            }
+        }else{
+            if(!grade){
+                return fError(res, "Please enter the grade")
             }
         }
 
@@ -117,6 +122,7 @@ export const addMember = async(req, res, next) => {
         const newMember = new member({
             memberType, 
             department,
+            grade,
             personalId,
             memberId, 
             name, 
@@ -149,6 +155,7 @@ export const editMember = async(req, res, next) => {
             memberType, 
             memberDatabaseId,
             department,
+            grade,
             personalId,
             memberId, 
             name, 
@@ -172,7 +179,7 @@ export const editMember = async(req, res, next) => {
         }
 
         //becareful here, cuz, if the user just update the photo, there might be error here
-        if(!department && !personalId && !memberId && !name && !nrc && !gender 
+        if(!department && !grade && !personalId && !memberId && !name && !nrc && !gender 
             && !phone && !email && !permanentAddress && !currentAddress && !note && !req.file){
                 return fError(res, "Please enter at least one variable to update")
             }
@@ -222,6 +229,7 @@ export const editMember = async(req, res, next) => {
         const updatedMember = await member.findByIdAndUpdate(memberDatabaseId, {
             memberType, 
             department,
+            grade,
             personalId,
             memberId, 
             name, 

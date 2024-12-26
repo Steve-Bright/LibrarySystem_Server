@@ -9,6 +9,7 @@ export const MemberSchema = {
         name: Joi.string(),
         gender: Joi.string(),
         department: Joi.string(),
+        grade: Joi.string(),
         phone: Joi.string(),
         email: Joi.string().optional(),
         permanentAddress: Joi.string(),
