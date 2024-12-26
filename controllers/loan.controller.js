@@ -272,3 +272,35 @@ export const searchLoan = async(req, res, next) => {
         next(error)
     }
 }
+
+export const getAllLoans = async(req, res, next) => {
+    try{
+        const {page} = req.query;
+        let sortField = "dueDate";
+        let populate = {
+            memberId: "name memberType phone",
+            bookId: "category callNo bookTitle"
+        }
+
+        const populateString = Object.entries(populate).map(
+            ([path, select]) => ({
+                path,
+                select,
+            })
+        );
+
+
+        const loans = await paginate(
+            loanModel, 
+            {}, 
+            1,
+            10,
+            sortField,
+            populateString
+        );
+        fMsg(res, "All Loans", loans, 200)
+    }catch(error){
+        console.log("get all loans error " + error)
+        next(error)
+    }
+}

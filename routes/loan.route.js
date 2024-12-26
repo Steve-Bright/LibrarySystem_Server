@@ -1,5 +1,5 @@
 import express from "express";
-import { addLoan, checkLoan, deleteLoan, returnLoan, searchLoan, extendLoan} from "../controllers/loan.controller.js";
+import { addLoan, checkLoan, deleteLoan, returnLoan, searchLoan, extendLoan, getAllLoans} from "../controllers/loan.controller.js";
 import { validateToken, isManager } from "../utils/validator.js"
 import { validate } from "node-cron";
 
@@ -12,4 +12,5 @@ router.post("/returnLoan/:loanId", validateToken(), returnLoan)
 router.delete("/deleteLoan/:loanId", validateToken(), deleteLoan)
 router.post("/searchLoan", validateToken(), searchLoan)
 router.post("/extendLoan/:loanId", validateToken(), extendLoan)
+router.get("/allLoans", validateToken(), getAllLoans)
 export default router;
