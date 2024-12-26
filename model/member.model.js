@@ -29,8 +29,7 @@ const memberSchema = new mongoose.Schema({
         index: true
     },
     nrc: {
-        type: String,
-        unique: true
+        type: String
     },
     gender: {
         type: String, 

@@ -18,7 +18,7 @@ router.get("/getMember", validateToken(), getMember)
 router.post("/banMember", validateToken(), isManager(), toggleBanMember)
 router.delete("/deleteMember", validateToken(), isManager(), deleteMember )
 router.post("/extendMembership/:memberDatabaseId", validateToken(), isManager(), extendMembership)
-router.get("/getLatestAccNo/:memberType", validateToken(), getLatestMemberId);
+router.get("/getLatestMemberId/:memberType", validateToken(), getLatestMemberId);
 router.get("/checkBannedMembers", validateToken(), checkBannedMembers)
 router.post("/searchMember", validateToken(), searchMember)
 export default router;

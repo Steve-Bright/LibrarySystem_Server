@@ -161,6 +161,8 @@ export const editMember = async(req, res, next) => {
             note
         } = req.body
 
+        console.log(req.body)
+
         if(!memberType){
             return fError(res, "Member type is required")
         }
@@ -191,9 +193,11 @@ export const editMember = async(req, res, next) => {
             return fError(res, "There is already duplicate member id ")
         }
 
-        const sameNrc = await member.findOne({nrc})
-        if(sameNrc){
-            return fError(res, "There is already duplicate nrc")
+        if(nrc){
+            const sameNrc = await member.findOne({nrc})
+            if(sameNrc){
+                return fError(res, "There is already duplicate nrc")
+            }
         }
 
         const sameEmail = await member.findOne({email})
@@ -232,7 +236,7 @@ export const editMember = async(req, res, next) => {
         }, {new: true})
 
         await updatedMember.save();
-        fMsg(res, "Member is created successfully", updatedMember, 200)
+        fMsg(res, "Member is edited successfully", updatedMember, 200)
         return [actualMemberPhoto]
 
     }catch(error){

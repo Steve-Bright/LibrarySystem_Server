@@ -13,6 +13,7 @@ export const MemberSchema = {
         email: Joi.string().optional(),
         permanentAddress: Joi.string(),
         currentAddress: Joi.string(),
+        note:Joi.string().allow(null, "").optional(),
         memberId: Joi.when("memberType", {
             is: "student",
             then: Joi.string()
@@ -44,13 +45,14 @@ export const MemberSchema = {
             is: Joi.valid("teacher", "staff"),
             then: Joi
             .string()
-            .pattern(/^([1-9]|1[0-2])\/[A-Za-z]+\([A-Za-z]+\)\d{6}$/)
+            .pattern(/^([1-9]|1[0-4])\/[A-Za-z]+\([A-Za-z]+\)\d{6}$/)
             .message({
               "string.pattern.base": "Incorrect NRC Format"
             }),
             otherwise: Joi
             .string()
-            .pattern(/^([1-9]|1[0-2])\/[A-Za-z]+\([A-Za-z]+\)\d{6}$/)
+            .allow(null, "")
+            .pattern(/^([1-9]|1[0-4])\/[A-Za-z]+\([A-Za-z]+\)\d{6}$/)
             .message({
               "string.pattern.base": "Incorrect NRC Format"
             })
