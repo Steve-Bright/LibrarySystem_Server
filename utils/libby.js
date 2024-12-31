@@ -53,12 +53,10 @@ export const paginate = async (model, filter, page = 1, limit = 10, sortField = 
         let query = model.find(filter).skip(skip).limit(limit);
 
         if (sortField == 'dueDate') {
-            console.log("hello?")
             query = query.sort({
                 dueDate: 1
             });
         } else if (sortField) {
-            console.log("hi")
             query = query.sort({ [sortField]: -1 }); // Sort by the provided field (descending)
         }
 

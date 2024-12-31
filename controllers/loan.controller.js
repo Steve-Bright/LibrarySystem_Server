@@ -147,7 +147,7 @@ export const extendLoan = async(req, res, next) => {
         }
 
         if(todayDate() != loanFound.dueDate && todayDate(1) != loanFound.dueDate && todayDate() < loanFound.dueDate){
-            return fError(res, "You are not allowed to extend before due date")
+            return fError(res, "You are not allowed to extend before due date", 400)
         }
 
         let memberType = loanFound.memberId.memberType;
@@ -278,7 +278,7 @@ export const getAllLoans = async(req, res, next) => {
         const {page} = req.query;
         let sortField = "dueDate";
         let populate = {
-            memberId: "name memberType phone",
+            memberId: "name memberType phone memberId",
             bookId: "category callNo bookTitle"
         }
 
@@ -301,6 +301,28 @@ export const getAllLoans = async(req, res, next) => {
         fMsg(res, "All Loans", loans, 200)
     }catch(error){
         console.log("get all loans error " + error)
+        next(error)
+    }
+}
+
+export const getLoanDetail = async(req, res, next) => {
+    try{
+        const loanId = req.params.loanId
+        if(!loanId){
+            return fError(res, "Please enter the required field")
+        }
+
+        const loanDetail = await loanModel
+                                .findById(loanId)
+                                .populate("memberId", "name photo memberId memberType phone")
+                                .populate("bookId", "bookCover bookTitle callNo category")
+        if(!loanDetail){
+            return fError(res, "Loan not found", 404)
+        }
+
+        fMsg(res, "Loan detail", loanDetail, 200)
+    }catch(error){
+        console.log("get loan detail error " + error)
         next(error)
     }
 }
