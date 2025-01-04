@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+    <head>
+        <title>Library Server</title>
+    </head>
+
+    <body>
+        <form id="serverAuthentication">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+
+            <br>
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+
+            <br>
+
+            <button type="submit">Submit</button>
+        </form>
+    </body>
+
+    <script>
+        let formEl = document.getElementById("serverAuthentication")
+        formEl.addEventListener("submit", (e) => {
+            e.preventDefault()
+            let credentials = {username: e.target.username.value, password: e.target.password.value}
+            console.log("these are credentials", credentials)
+            authenticate(credentials)
+        })
+        function authenticate(credentials){
+            window.authenticateApi.authUser(credentials)
+        }
+
+        
+
+        
+    </script>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+
+    <body>
+        <h2 id="serverStatus" style="color: red; font-family:'Copperplate', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif">Library server is not running</h2>
+        <label for="serverPort">Server port: </label>
+        <input type="text" id="serverPort" value="3000" required>
+        <button id="runServer">Run server</button>
+        <button id="stopServer">Stop server</button>
+    </body>
+
+    <script>
+        const serverStatus = document.getElementById("serverStatus")
+        const runServer = document.getElementById("runServer")
+        const stopServer = document.getElementById("stopServer")
+        runServer.addEventListener("click", () => {
+            let portValue = document.getElementById("serverPort").value
+            window.serverApi.startServer(portValue)
+
+            window.serverApi.serverResponse((event, response) => {
+            console.log("Server response: " + response);
+
+            let successStatus;
+                if (response === true) {
+                    serverStatus.innerHTML = "Server is running on port " +  portValue;
+                    serverStatus.style.color = "green"
+                } else if(response === false){
+                    serverStatus.innerHTML = "Failed to run server"
+                    serverStatus.style.color = "red"
+                    successStatus = false;
+                }else{
+                    serverStatus.innerHTML = "Error! Please try to stop server and restart again"
+                    serverStatus.style.color = "red"
+                }
+            });
+            
+        })
+
+        stopServer.addEventListener("click", () => {
+            window.serverApi.stopServer()
+
+            window.serverApi.stopServerResponse((event, response) => {
+                console.log("Server stop response: " + response);
+
+                if (response === true) {
+                    serverStatus.innerHTML = "Server is not running "
+                    serverStatus.style.color = "red"
+                } else if(response === false) {
+                    serverStatus.innerHTML = "Make sure server is running before stopping!"
+                    serverStatus.style.color = "red"
+                }
+            });
+        })
+
+
+    </script>
+</html>
