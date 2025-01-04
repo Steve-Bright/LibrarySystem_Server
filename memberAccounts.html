@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+    <head>
+        <title>Member Accounts</title>
+    </head>
+
+    <body>
+        <button id="backToHome">Back to home</button>
+        <br>
+        <h3>Member Accounts</h3>
+        <table>
+            <thead>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+            </thead>
+
+            <tbody id="userAccountData">
+            </tbody>
+        </table>
+    </body>
+
+    <script>
+        const userAccountData = document.getElementById("userAccountData")
+        const backToHome = document.getElementById("backToHome")
+
+        backToHome.addEventListener("click",() => {
+            window.navigationApi.toAnotherPage("home.html")
+        })
+        window.authenticateApi.getAccounts()
+
+        window.authenticateApi.getAccountsResponse(async(event, response) => {
+            console.log("User data: " + response);
+
+            let userData = JSON.parse(response)
+            userData.forEach(user => {
+                let row = document.createElement("tr")
+                let username = document.createElement("td")
+                let email = document.createElement("td")
+                let role = document.createElement("td")
+
+                username.innerHTML = user.userName
+                email.innerHTML = user.email
+                role.innerHTML = user.role
+
+                row.appendChild(username)
+                row.appendChild(email)
+                row.appendChild(role)
+
+                userAccountData.appendChild(row)
+            });
+        })
+    </script>
+</html>
