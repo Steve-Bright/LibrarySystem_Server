@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "nodemon server.js"
+    "test": "nodemon --watch . --exec electron ."
   },
   "type": "module",
   "author": "",
@@ -13,6 +13,7 @@
     "@supabase/supabase-js": "^2.45.5",
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",
+    "electron": "^33.2.1",
     "express": "^4.21.1",
     "fs": "^0.0.1-security",
     "joi": "^17.13.3",
