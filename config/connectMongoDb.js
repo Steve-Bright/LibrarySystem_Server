@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import { mongo_url } from "../utils/swamhtet.js";
 
 dotenv.config();
 
-const MONGO_DB_URL = process.env.MONGO_DB_URL;
+const MONGO_DB_URL = mongo_url;
 const connectToMongoDB = async () => {
   try {
 

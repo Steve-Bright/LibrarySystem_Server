@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+    <head>
+        <title>Create Library Member accounts</title>
+    </head>
+    <body>
+        <button id="backToHome">Go back</button>
+        <br><br>
+        <form id="createMemberAccount">
+
+            <label for="userName">Member Name:</label>
+            <input type="text" id="userName" name="userName" required>
+            <br><br>
+
+            <label for="memberEmail">Member Email:</label>
+            <input type="email" id="memberEmail" name="memberEmail" required>
+
+            <br><br>
+            <label for="memberPassword">Member Password</label>
+            <input type="password" id="memberPassword" name="memberPassword" required>
+
+            <br><br>
+
+            <label for="memberRole">MemberRole: </label>
+            <input type="radio" id="manager" name="memberRole" value="manager">
+            <label for="manager">Manager</label>
+            <input type="radio" id="helper" name="memberRole" value="helper">
+            <label for="helper">Helper</label><br>
+
+            <br><br>
+            <button type="submit">Create Account</button>
+        </form>
+    </body>
+
+    <script>
+        const backToHome = document.getElementById("backToHome")
+        const createMemberAccount = document.getElementById("createMemberAccount")
+        backToHome.addEventListener("click", () => {
+            window.navigationApi.toAnotherPage("home.html")
+        })
+        createMemberAccount.addEventListener("submit", async(e) => {
+            e.preventDefault()
+            let memberDetails = {userName: e.target.userName.value, email: e.target.memberEmail.value, password: e.target.memberPassword.value, role: e.target.memberRole.value}
+            console.log("these are member details", memberDetails)
+            await createAccount(memberDetails)
+        })
+        async function createAccount(memberDetails){
+            await window.authenticateApi.createAccount(memberDetails)
+        }
+    </script>
+</html>

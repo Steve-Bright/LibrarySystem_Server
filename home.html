@@ -1,35 +1,43 @@
 <!DOCTYPE html>
 
     <body>
-        <h2 id="serverStatus" style="color: red; font-family:'Copperplate', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif">Library server is not running</h2>
+        <h2 id="serverStatus" style="color: red; font-family:'Copperplate', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif"></h2>
         <label for="serverPort">Server port: </label>
         <input type="text" id="serverPort" value="3000" required>
         <button id="runServer">Run server</button>
         <button id="stopServer">Stop server</button>
+        <br>
+        <br>
+        <button id="createAccount">Create library accounts</button>
+        <button id="memberAccounts">Member accounts</button>
     </body>
 
     <script>
         const serverStatus = document.getElementById("serverStatus")
+        const createAccount = document.getElementById("createAccount")
         const runServer = document.getElementById("runServer")
         const stopServer = document.getElementById("stopServer")
+        const memberAccounts= document.getElementById("memberAccounts")
+        createAccount.addEventListener("click", () => {
+            window.navigationApi.toAnotherPage("createAccount.html")
+        })
+
+        document.addEventListener("DOMContentLoaded", () => {
+            console.log("umm hello?")
+            checkServerStatus()
+        })
+
         runServer.addEventListener("click", () => {
             let portValue = document.getElementById("serverPort").value
             window.serverApi.startServer(portValue)
 
+            checkServerStatus()
             window.serverApi.serverResponse((event, response) => {
-            console.log("Server response: " + response);
 
-            let successStatus;
-                if (response === true) {
-                    serverStatus.innerHTML = "Server is running on port " +  portValue;
-                    serverStatus.style.color = "green"
-                } else if(response === false){
+            if(response === false){
                     serverStatus.innerHTML = "Failed to run server"
                     serverStatus.style.color = "red"
                     successStatus = false;
-                }else{
-                    serverStatus.innerHTML = "Error! Please try to stop server and restart again"
-                    serverStatus.style.color = "red"
                 }
             });
             
@@ -38,18 +46,45 @@
         stopServer.addEventListener("click", () => {
             window.serverApi.stopServer()
 
+            checkServerStatus()
             window.serverApi.stopServerResponse((event, response) => {
                 console.log("Server stop response: " + response);
 
-                if (response === true) {
-                    serverStatus.innerHTML = "Server is not running "
-                    serverStatus.style.color = "red"
-                } else if(response === false) {
+                if(response === false) {
                     serverStatus.innerHTML = "Make sure server is running before stopping!"
                     serverStatus.style.color = "red"
                 }
             });
         })
+
+        memberAccounts.addEventListener("click", () => {
+            window.navigationApi.toAnotherPage("memberAccounts.html")
+        })
+
+        function checkServerStatus(){
+            window.serverApi.serverStatus()
+            window.serverApi.serverStatusResponse((event, response) => {
+                console.log("Server status: " + response);
+
+                if (response) {
+                    let ports = response.split("::::")
+                    serverStatus.innerHTML = `Server is running in port ${ports[1]}`
+                    
+                    serverStatus.style.color = "green"
+                    runServer.disabled = true
+                    stopServer.disabled = false
+                    memberAccounts.disabled = false
+                    createAccount.disabled = false;
+                } else if(response === false) {
+                    serverStatus.innerHTML = "Server is not running"
+                    serverStatus.style.color = "red"
+                    runServer.disabled = false;
+                    stopServer.disabled = true;
+                    memberAccounts.disabled = true
+                    createAccount.disabled = true;
+                }
+            });
+        }
 
 
     </script>

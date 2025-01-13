@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import path from "path"
 import fs from "fs"
 import jwt from "jsonwebtoken";
+import {salt, secret_key} from "./swamhtet.js"
 
 export const fMsg = (res, msg, result = {}, statusCode = 200) => {
     return res.status(statusCode).json({ con: true, msg, result });
@@ -12,7 +13,7 @@ export const fError = (res, msg, statusCode = 500) => {
 };
 
 export const encode = (payload) => {
-    return bcrypt.hashSync(payload, Number(process.env.SALT))
+    return bcrypt.hashSync(payload, Number(salt))
 }
 
 export const decode = (payload, hash) => {
@@ -25,7 +26,7 @@ export const genToken = (payload) => {
             exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
             data: payload, 
         },
-        process.env.SECRET_KEY
+        secret_key
     )
 }
 
