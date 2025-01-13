@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { secret_key } from "./swamhtet.js";
 
 export let validateToken = () => {
     return async (req, res, next) => {
@@ -9,7 +10,7 @@ export let validateToken = () => {
       let token = req.headers.authorization.split(" ")[1];
       // console.log(token);
       try {
-        const tokenUser = jwt.verify(token, process.env.SECRET_KEY);
+        const tokenUser = jwt.verify(token, secret_key);
         req.user = tokenUser.data;
   
         next();
