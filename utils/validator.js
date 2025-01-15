@@ -22,8 +22,14 @@ export let validateToken = () => {
 
   export const validateBody = (schema) => {
     return (req, res, next) => {
-      console.log("does validate body work?")
-      let result = schema.validate(req.body);
+      const options = {
+        errors: {
+          wrap: {
+            label: false
+          }
+        }
+      };
+      let result = schema.validate(req.body, options);
   
       if (result.error) {
         next(new Error(result.error.details[0].message));

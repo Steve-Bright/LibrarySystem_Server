@@ -126,7 +126,7 @@ const bookSchema = new mongoose.Schema({
     }
     
 },{
-  timestamps: { createdAt: true}
+  timestamps: { createdAt: true, updatedAt: false}
 });
 
 const mmbook = mongoose.model("mmbook", bookSchema);

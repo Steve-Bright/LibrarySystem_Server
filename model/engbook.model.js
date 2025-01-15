@@ -113,7 +113,7 @@ const bookSchema = new mongoose.Schema({
         type: String
     },
     price: {
-        type: Number
+        type: String
     },
     donor: {
         type: String
@@ -130,7 +130,7 @@ const bookSchema = new mongoose.Schema({
     }
     
 }, {
-    timestamps: { createdAt: true }
+    timestamps: { createdAt: true, updatedAt: false }
 });
 
 const engbook = mongoose.model("engbook", bookSchema);

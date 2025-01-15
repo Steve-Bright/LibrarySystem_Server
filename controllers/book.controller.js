@@ -3,6 +3,7 @@ import engbook from "../model/engbook.model.js"
 import deletedbook from "../model/deletedbook.model.js"
 import {fMsg, fError, paginate} from "../utils/libby.js"
 import {kayinGyiBooks, kayinGyiBooksBarcode, kayinGyiTemp  } from "../utils/directories.js"
+import { mapBook } from "../utils/book.mapper.js"
 import {moveFile} from "../utils/libby.js"
 
 
@@ -45,9 +46,6 @@ export const addBook = async(req, res, next) => {
             catalogOwner
         } = req.body;
 
-        if(!category || !accNo || !bookTitle || !initial || !classNo || !callNo || !sor){
-            return fError(res, "Please enter the required field", 400)
-        }
 
         if(!req.files.bookCover){
             return fError(res, "Please upload a book cover", 400)
@@ -58,15 +56,11 @@ export const addBook = async(req, res, next) => {
         }
         
         let bookFormat;
-        if(category == "myanmar"){
-            bookFormat = mmbook
-        }else if(category == "english"){
-            bookFormat = engbook
-            if(!isbn){
-                return fError(res, "Need isbn" , 400)
-            }
-        }else{
-            return fError(res, "Wrong category input", 400)
+        switch(category){
+            case "myanmar": bookFormat = mmbook;
+                            break;
+            case "english": bookFormat = engbook;
+                            break;
         }
 
         const sameAccNo = await bookFormat.findOne({ accNo})
@@ -95,8 +89,7 @@ export const addBook = async(req, res, next) => {
         const actualBookCover = kayinGyiBooks + fileName;
         const actualBookBarcode = kayinGyiBooksBarcode + barcodeName
 
-
-        const newBook = new bookFormat({
+        const bookData = mapBook({
             accNo, 
             bookTitle, 
             subTitle, 
@@ -132,7 +125,9 @@ export const addBook = async(req, res, next) => {
             donor, 
             catalogOwner,
             barcode
-        });
+        })
+
+        const newBook = new bookFormat(bookData);
 
         await newBook.save();
 
