@@ -86,6 +86,8 @@ const memberSchema = new mongoose.Schema({
         enum: [0, 1, 2, 3],
         default: 0
     }
+}, {
+    timestamps: { createdAt: true}
 });
 
 export default mongoose.model("Member", memberSchema);

@@ -108,3 +108,36 @@ export const nextYear = () => {
     let nextYear =  yyyy + "-" + mm + "-" + dd;
     return Date.parse(nextYear);
 }
+
+export const getWeeklyDates = ()=> {
+    let today = new Date();
+    today.setHours(0, 0, 0, 0)
+    let todayDay = today.getDay()
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Friday", "Saturday"]
+    let dateDifference = -1; //since the calculation will start once inside the loop
+    for(let i = todayDay; i >=0 ; i--){
+        dateDifference++;
+    }
+
+    let startOfWeek = new Date(today)
+    let endOfWeek = new Date(today)
+    startOfWeek.setDate(today.getDate() - dateDifference)
+    endOfWeek.setDate(startOfWeek.getDate() + 6)
+    return {startOfWeek, endOfWeek}
+}
+
+export const getMonthlyDates = () => {
+    let today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to midnight
+
+    // Start of the month
+    let startOfMonth = new Date(today);
+    startOfMonth.setDate(1); // Set the day to the first day of the month
+
+    // End of the month
+    let endOfMonth = new Date(today);
+    endOfMonth.setMonth(today.getMonth() + 1); // Move to the next month
+    endOfMonth.setDate(0); // Set the date to the last day of the previous month (end of the current month)
+
+    return {startOfMonth, endOfMonth}
+}
