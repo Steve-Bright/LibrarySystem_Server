@@ -2,9 +2,9 @@ import mmbook from "../model/mmbook.model.js"
 import engbook from "../model/engbook.model.js"
 import deletedbook from "../model/deletedbook.model.js"
 import {fMsg, fError, paginate} from "../utils/libby.js"
-import {kayinGyiBooks, kayinGyiBooksBarcode, kayinGyiTemp  } from "../utils/directories.js"
+import {kayinGyiBooks, kayinGyiBooksBarcode, kayinGyiTemp, homeDirectory  } from "../utils/directories.js"
 import { mapBook } from "../utils/book.mapper.js"
-import {moveFile} from "../utils/libby.js"
+import {moveFile, deleteFile} from "../utils/libby.js"
 
 
 export const addBook = async(req, res, next) => {
@@ -179,32 +179,26 @@ export const editBook = async(req, res, next) => {
             catalogOwner
         } = req.body;
 
-        if(!category){
-            return fError(res, "Need category to edit", 400)
-        }
-
-        if(!bookId){
-            return fError(res, "Need book id to edit", 400);
-        }
 
         let bookFormat;
-        if(category == "myanmar"){
-            bookFormat = mmbook
-        }else if(category == "english"){
-            bookFormat = engbook
-        }else{
-            return fError(res, "Wrong category input", 400)
+        switch(category){
+          case "myanmar": bookFormat = mmbook;
+                          break;
+          case "english": bookFormat = engbook;
+                          break;
         }
 
         const book = await bookFormat.findById(bookId);
-        const bookAccNo = book.accNo;
         if(!book){
             return fError(res, "Book does not exist", 400)
         }
+        const bookAccNo = book.accNo;
 
-        const sameAccNo = await bookFormat.findOne({ accNo})
-        if(sameAccNo){
-            return fError(res, "There is already same duplicate accession number", 400)
+        if(accNo){
+            const sameAccNo = await bookFormat.findOne({accNo: null})
+            if(sameAccNo){
+                return fError(res, "There is already same duplicate accession number", 400)
+            }
         }
 
         const sameCallNo = await bookFormat.findOne({callNo})
@@ -213,12 +207,15 @@ export const editBook = async(req, res, next) => {
         }
         
         let bookCover;
-        let actualBookCover
+        let actualBookCover;
+        let oldBookCover
         console.log("this is req files " + JSON.stringify(req.file))
         if(req.file){
             const fileName = bookAccNo + "-" + Date.now() + ".png"
             bookCover = "/KayinGyi/books/" + fileName
             actualBookCover = kayinGyiBooks + fileName;
+            const bookFound = await bookFormat.findById(bookId)
+            oldBookCover = homeDirectory + bookFound.bookCover;
         }
 
         const updatedBook = await bookFormat.findByIdAndUpdate(bookId, {
@@ -259,7 +256,9 @@ export const editBook = async(req, res, next) => {
         }, {new: true})
 
         fMsg(res, "Book updated successfully", updatedBook, 200)
-        return [actualBookCover]
+        console.log("This is old book cover " + oldBookCover)
+        console.log("This is actual book cover " + actualBookCover)
+        return [oldBookCover, actualBookCover]
     }catch(error){
         console.log("edit book error: " + error)
         next(error)
@@ -357,9 +356,11 @@ export const deleteBook = async(req, res, next) => {
         }
         let accNo = deletedBook.accNo
         await (new deletedbook({category, accNo})).save()
-         
+        
+        const actualBookCover = homeDirectory + deletedBook.bookCover;
+        const actualBookBarcode = homeDirectory + deletedBook.barcode
         fMsg(res, "Book deleted successfully", deletedBook, 200)
-
+        return [actualBookBarcode, actualBookCover]
     }catch(error){
         console.log("delete book error " + error )
         next(error)
@@ -468,11 +469,32 @@ export function moveImage(directory, fileNames){
         }
     }
     
-    // for(let singleFile of fileNames){
-    //     let oldPath = kayinGyiTemp + singleFile;
-    //     if(typeof directory == "string"){
-    //         moveFile(oldPath, directory)
-    //     }
-    // }
-    
+}
+
+export function deleteImage(fileNames){
+    console.log("filenames for delete " + fileNames)
+    for(let eachFile of fileNames){
+        let deleteResult = deleteFile(eachFile)
+        if(deleteResult){
+            console.log("deleted successfully")
+        }
+    }
+}
+
+export function editImage(fileNames, editedFile){
+    console.log('File names ' + fileNames)
+    let oldBookCover = fileNames[0]
+    let newBookCover = fileNames[1]
+
+    for(let i = 0; i < editedFile.length; i++){
+        let tempPath = kayinGyiTemp + editedFile[i]
+        if(typeof newBookCover == "string"){
+            let moveResult = moveFile(tempPath, newBookCover)
+            if(moveResult){
+                console.log("File is edited successfully!")
+                deleteFile(oldBookCover)
+            }
+        }
+    }
+
 }

@@ -31,13 +31,20 @@ export const genToken = (payload) => {
 }
 
 export const moveFile = (tempPath, finalPath) => {
-    console.log("This is new path " + finalPath)
     fs.rename(tempPath, finalPath, (error) => {
-        console.log("moving image error " + error)
-        return false;
+        if(error) return false;
     })
     return true;
 }
+
+export const deleteFile = (fileName) => {
+    fs.unlink(fileName, (err) => {
+
+        if (err) return false
+    }); 
+    return true
+}
+
 const today = new Date();
 export const paginate = async (model, filter, page = 1, limit = 10, sortField = null, populate = []) => {
     try {

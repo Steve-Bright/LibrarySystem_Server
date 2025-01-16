@@ -74,7 +74,7 @@ export const BookSchema = {
       accNo: Joi.string()
         .pattern(/^CC-\d{5}$/)
         .message({
-          "string.pattern.base": "Incorrect Member format 'S-XXXXX'"
+          "string.pattern.base": "Incorrect Accession Number format CC-XXXXX"
         })
         .label("Accession Number")
         .required(),
@@ -229,6 +229,14 @@ export const BookSchema = {
         .label("Category")
         .required(),
 
+      accNo: Joi.string()
+        .pattern(/^CC-\d{5}$/)
+        .message({
+          "string.pattern.base": "Incorrect Accession number format CC-XXXXX"
+        })
+        .label("Accession Number")
+        .optional(),
+
       // Using xor to ensure at least one of these keys is modified, but not both
       bookTitle: Joi.string()
         .label("Book Title")
@@ -370,7 +378,7 @@ export const BookSchema = {
     })
       .or('bookTitle', 'subTitle', 'parallelTitle', 'initial', 'classNo', 'callNo', 'sor', 'isbn', 'authorOne', 'authorTwo', 'authorThree', 'other', 'translator', 'pagination', 'size', 'illustrationType', 'seriesTitle', 'seriesNo', 'includeCD', 'subjectHeadings', 'edition', 'editor', 'place', 'publisher', 'year', 'keywords', 'summary', 'notes', 'source', 'price', 'donor', 'catalogOwner')
       .messages({
-        "object.or": "Please specify at least color or size",
+        "object.missing": "Please specify at least one field to update",
       }),
     
 }
