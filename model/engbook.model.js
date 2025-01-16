@@ -27,7 +27,7 @@ const bookSchema = new mongoose.Schema({
         required: true
     },
     classNo: {
-        type: Number,
+        type: String,
         required: true,
         index: true
     },
@@ -67,7 +67,7 @@ const bookSchema = new mongoose.Schema({
         type: String
     },
     size: {
-        type: Number
+        type: String
     },
     illustrationType: {
         type: String
@@ -79,13 +79,14 @@ const bookSchema = new mongoose.Schema({
         type: String
     },
     includeCD: {
-        type: String
+        type: Boolean,
+        default: false
     },
     subjectHeadings: {
         type: String
     },
     edition: {
-        type: Number
+        type: String
     },
     editor: {
         type: String
@@ -112,7 +113,7 @@ const bookSchema = new mongoose.Schema({
         type: String
     },
     price: {
-        type: Number
+        type: String
     },
     donor: {
         type: String
@@ -128,6 +129,8 @@ const bookSchema = new mongoose.Schema({
         default: false
     }
     
+}, {
+    timestamps: { createdAt: true, updatedAt: false }
 });
 
 const engbook = mongoose.model("engbook", bookSchema);

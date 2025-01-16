@@ -3,7 +3,7 @@ import cron from "node-cron";
 import mmbook from "../model/mmbook.model.js";
 import engbook from "../model/engbook.model.js";
 import member from "../model/member.model.js"
-import {fMsg, fError, paginate, todayDate} from "../utils/libby.js"
+import {fMsg, fError, paginate, todayDate, getWeeklyDates, getMonthlyDates} from "../utils/libby.js"
 
 export const addLoan = async(req, res, next) => {
     try{
@@ -305,6 +305,39 @@ export const getAllLoans = async(req, res, next) => {
     }
 }
 
+export const getWeeklyLoans = async(req, res, next) => {
+    try{
+        const weeklyLoans = await loanModel
+        .find({
+            loanDate: {
+                $gte: getWeeklyDates().startOfWeek,
+                // $lte: getWeeklyDates().endOfWeek
+            }
+        })
+
+        fMsg(res, "Weekly Loans", weeklyLoans, 200)
+    }catch(error){
+        console.log("get weekly loans error " + error)
+        next(error)
+    }
+}
+
+export const getMonthlyLoans = async(req, res, next) => {
+    try{
+        const monthlyLoans = await loanModel
+        .find({
+            loanDate: {
+                $gte: getMonthlyDates().startOfMonth
+            }
+        })
+
+        fMsg(res, "Weekly Loans", monthlyLoans, 200)
+    }catch(error){
+        console.log("get monthly loans error " + error)
+        next(error)
+    }
+}
+
 export const getLoanDetail = async(req, res, next) => {
     try{
         const loanId = req.params.loanId
@@ -323,6 +356,16 @@ export const getLoanDetail = async(req, res, next) => {
         fMsg(res, "Loan detail", loanDetail, 200)
     }catch(error){
         console.log("get loan detail error " + error)
+        next(error)
+    }
+}
+
+export const getTodayDeadlineLoan = async(req, res, next) => {
+    try{
+        const todayLoans = await loanModel.find({dueDate: todayDate(), loanStatus: true})
+        fMsg(res, "Today deadline's Loans", todayLoans, 200) 
+    }catch(error){
+        console.log("get today deadline loan error " + error)
         next(error)
     }
 }

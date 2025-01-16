@@ -62,3 +62,323 @@ export const MemberSchema = {
         })
     })
 }
+
+export const BookSchema = {
+  register: 
+    Joi.object({
+      category: Joi.string()
+        .valid("myanmar", "english")
+        .label("Category")
+        .required(),
+
+      accNo: Joi.string()
+        .pattern(/^CC-\d{5}$/)
+        .message({
+          "string.pattern.base": "Incorrect Accession Number format CC-XXXXX"
+        })
+        .label("Accession Number")
+        .required(),
+
+      bookTitle: Joi.string()
+        .label("Book Title")
+        .required(),
+
+      subTitle: Joi.string()
+        .label("Sub Title")
+        .optional(),
+
+      parallelTitle: Joi.string()
+        .label("Parallel Title")
+        .optional(),
+
+      initial: Joi.string()
+        .label("Author Initial")
+        .required(),
+
+      classNo: Joi.string()
+        .pattern(/^\d{3}(\.\d+)?$/)
+        .message({
+          "string.pattern.base": "Please enter the correct class number format"
+        })
+        .label("Class Number")
+        .required(),
+
+      callNo: Joi.string()
+        .label("Call Number")
+        .required(),
+
+      sor: Joi.string()
+        .label("Statement of Responsibility")
+        .required(),
+
+      isbn: Joi.when("category", {
+        is: "myanmar",
+        then: Joi.string()
+          .forbidden(),
+          otherwise: Joi.string().required()
+      })
+      .label("ISBN"),
+      
+      authorOne: Joi.string()
+        .label("Author One")
+        .optional(),
+      
+      authorTwo: Joi.string()
+        .label("Author Two")
+        .optional(),
+
+      authorThree: Joi.string()
+        .label("Author Three")
+        .optional(),
+
+      other: Joi.string()
+        .label("Other authors")
+        .optional(),
+
+      translator: Joi.string()
+        .label("Translator")
+        .optional(),
+
+      pagination: Joi.string()
+        .label("Pagination")
+        .optional(),
+
+      size: Joi.string()
+        .label("Size")
+        .optional(),
+
+      illustrationType: Joi.string()
+        .label("Illustration Type")
+        .optional(),
+
+      seriesTitle: Joi.string()
+        .label("Series Title")
+        .optional(),
+
+      seriesNo: Joi.string()
+        .label("Series Number")
+        .optional(),
+
+      includeCD: Joi.boolean()
+        .label("CD in the book")
+        .optional(),
+        
+      subjectHeadings: Joi.string()
+        .label("Subject Headings")
+        .optional(),
+
+      edition: Joi.string()
+        .label("Edition")
+        .optional(),
+
+      editor: Joi.string()
+        .label("Editor")
+        .optional(),
+
+      place: Joi.string()
+        .label("Place")
+        .optional(),
+
+      publisher: Joi.string()
+        .label("Publisher")
+        .optional(),
+
+      year: Joi.number()
+        .integer()
+        .min(0)
+        .label("Year")
+        .max(new Date().getFullYear())
+        .optional(),
+
+      keywords: Joi.string()
+        .label("Keywords")
+        .optional(),
+
+      summary: Joi.string()
+        .label("Summary")
+        .optional(),
+
+      notes: Joi.string()
+        .label('Notes')
+        .optional(),
+
+      source: Joi.string()
+        .label("Source")
+        .optional(),
+
+      price: Joi.string()
+        .label("Price"),
+
+      donor: Joi.string()
+        .label("Donor")
+        .optional(),
+
+      catalogOwner: Joi.number()
+        .label("Catalog Owner")
+        .optional()
+    }),
+
+    edit: 
+    Joi.object({
+      bookId: Joi.string()
+        .label("Book ID")
+        .required(),
+
+      category: Joi.string()
+        .valid("myanmar", "english")
+        .label("Category")
+        .required(),
+
+      accNo: Joi.string()
+        .pattern(/^CC-\d{5}$/)
+        .message({
+          "string.pattern.base": "Incorrect Accession number format CC-XXXXX"
+        })
+        .label("Accession Number")
+        .optional(),
+
+      // Using xor to ensure at least one of these keys is modified, but not both
+      bookTitle: Joi.string()
+        .label("Book Title")
+        .optional(),
+
+      subTitle: Joi.string()
+        .label("Sub Title")
+        .optional(),
+
+      parallelTitle: Joi.string()
+        .label("Parallel Title")
+        .optional(),
+
+      initial: Joi.string()
+        .label("Author Initial")
+        .optional(),
+
+      classNo: Joi.string()
+        .pattern(/^\d{3}(\.\d+)?$/)
+        .message({
+          "string.pattern.base": "Please enter the correct class number format"
+        })
+        .label("Class Number")
+        .optional(),
+
+      callNo: Joi.string()
+        .label("Call Number")
+        .optional(),
+
+      sor: Joi.string()
+        .label("Statement of Responsibility")
+        .optional(),
+
+      isbn: Joi.when("category", {
+        is: "myanmar",
+        then: Joi.string()
+          .forbidden(),
+        otherwise: Joi.string().optional()
+      })
+      .label("ISBN"),
+
+      authorOne: Joi.string()
+        .label("Author One")
+        .optional(),
+
+      authorTwo: Joi.string()
+        .label("Author Two")
+        .optional(),
+
+      authorThree: Joi.string()
+        .label("Author Three")
+        .optional(),
+
+      other: Joi.string()
+        .label("Other authors")
+        .optional(),
+
+      translator: Joi.string()
+        .label("Translator")
+        .optional(),
+
+      pagination: Joi.string()
+        .label("Pagination")
+        .optional(),
+
+      size: Joi.string()
+        .label("Size")
+        .optional(),
+
+      illustrationType: Joi.string()
+        .label("Illustration Type")
+        .optional(),
+
+      seriesTitle: Joi.string()
+        .label("Series Title")
+        .optional(),
+
+      seriesNo: Joi.string()
+        .label("Series Number")
+        .optional(),
+
+      includeCD: Joi.boolean()
+        .label("CD in the book")
+        .optional(),
+
+      subjectHeadings: Joi.string()
+        .label("Subject Headings")
+        .optional(),
+
+      edition: Joi.string()
+        .label("Edition")
+        .optional(),
+
+      editor: Joi.string()
+        .label("Editor")
+        .optional(),
+
+      place: Joi.string()
+        .label("Place")
+        .optional(),
+
+      publisher: Joi.string()
+        .label("Publisher")
+        .optional(),
+
+      year: Joi.number()
+        .integer()
+        .min(0)
+        .label("Year")
+        .max(new Date().getFullYear())
+        .optional(),
+
+      keywords: Joi.string()
+        .label("Keywords")
+        .optional(),
+
+      summary: Joi.string()
+        .label("Summary")
+        .optional(),
+
+      notes: Joi.string()
+        .label('Notes')
+        .optional(),
+
+      source: Joi.string()
+        .label("Source")
+        .optional(),
+
+      price: Joi.string()
+        .label("Price"),
+
+      donor: Joi.string()
+        .label("Donor")
+        .optional(),
+
+      catalogOwner: Joi.number()
+        .label("Catalog Owner")
+        .optional()
+    })
+      .or('bookTitle', 'subTitle', 'parallelTitle', 'initial', 'classNo', 'callNo', 'sor', 'isbn', 'authorOne', 'authorTwo', 'authorThree', 'other', 'translator', 'pagination', 'size', 'illustrationType', 'seriesTitle', 'seriesNo', 'includeCD', 'subjectHeadings', 'edition', 'editor', 'place', 'publisher', 'year', 'keywords', 'summary', 'notes', 'source', 'price', 'donor', 'catalogOwner')
+      .messages({
+        "object.missing": "Please specify at least one field to update",
+      }),
+    
+}
