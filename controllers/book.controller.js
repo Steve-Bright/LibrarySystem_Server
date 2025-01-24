@@ -326,7 +326,7 @@ export const getAllBooks = async(req, res, next) => {
         }
 
         
-        const books = await paginate(bookFormat, null, page)
+        const books = await paginate(bookFormat, null, page, 10,"createdAt")
         fMsg(res, "Books fetched successfully", books, 200)
     }catch(error){
         console.log("get all books error " + error)
@@ -425,7 +425,7 @@ export const searchBook = async(req, res, next) => {
         if(accNo){
             searchFields["accNo"] = accNo
         }
-        if(!isbn){
+        if(isbn){
             searchFields["isbn"] = {$regex: isbn, $options: "i"}
         }
         if(bookTitle){
