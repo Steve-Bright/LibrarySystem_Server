@@ -410,13 +410,13 @@ export const getLatestAccNo = async(req, res, next) => {
 export const searchBook = async(req, res, next) => {
     try{
 
-        const {category, accNo, bookTitle, sor, publisher, classNo} = req.query;
+        const {category, accNo, bookTitle, sor, publisher, classNo, isbn} = req.body;
 
         if(!category){
             return fError(res, "Please enter  the required field")
         }
 
-        if(!accNo && !bookTitle && !sor && !publisher && !classNo){
+        if(!accNo && !bookTitle && !sor && !publisher && !classNo && !isbn){
             return fError(res, "Please enter the specifc fields ")
         }
 
@@ -424,6 +424,9 @@ export const searchBook = async(req, res, next) => {
 
         if(accNo){
             searchFields["accNo"] = accNo
+        }
+        if(!isbn){
+            searchFields["isbn"] = {$regex: isbn, $options: "i"}
         }
         if(bookTitle){
             searchFields["bookTitle"] = { $regex: bookTitle, $options: 'i' };
