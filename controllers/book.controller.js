@@ -158,7 +158,7 @@ export const editBook = async(req, res, next) => {
             authorThree, 
             other, 
             translator, 
-            pagniation, 
+            pagination, 
             size, 
             illustrationType, 
             seriesTitle, 
@@ -176,7 +176,8 @@ export const editBook = async(req, res, next) => {
             source, 
             price, 
             donor, 
-            catalogOwner
+            catalogOwner,
+            editedPhoto
         } = req.body;
 
 
@@ -210,7 +211,7 @@ export const editBook = async(req, res, next) => {
         let actualBookCover;
         let oldBookCover
         console.log("this is req files " + JSON.stringify(req.file))
-        if(req.file){
+        if(editedPhoto && req.file){
             const fileName = bookAccNo + "-" + Date.now() + ".png"
             bookCover = "/KayinGyi/books/" + fileName
             actualBookCover = kayinGyiBooks + fileName;
@@ -218,15 +219,15 @@ export const editBook = async(req, res, next) => {
             oldBookCover = homeDirectory + bookFound.bookCover;
         }
 
-        const updatedBook = await bookFormat.findByIdAndUpdate(bookId, {
+        const bookData = mapBook({
             accNo, 
             bookTitle, 
             subTitle, 
             parallelTitle, 
             initial, 
             classNo, 
-            callNo,
-            bookCover, 
+            callNo, 
+            bookCover,
             sor, 
             isbn,
             authorOne, 
@@ -234,7 +235,7 @@ export const editBook = async(req, res, next) => {
             authorThree, 
             other, 
             translator, 
-            pagniation, 
+            pagination, 
             size, 
             illustrationType, 
             seriesTitle, 
@@ -253,7 +254,9 @@ export const editBook = async(req, res, next) => {
             price, 
             donor, 
             catalogOwner
-        }, {new: true})
+        })
+
+        const updatedBook = await bookFormat.findByIdAndUpdate(bookId, bookData, {new: true})
 
         fMsg(res, "Book updated successfully", updatedBook, 200)
         console.log("This is old book cover " + oldBookCover)
@@ -354,6 +357,9 @@ export const deleteBook = async(req, res, next) => {
         if(!deletedBook){
             return fError(res, "Book not found", 200)
         }
+
+        console.log("this function works till now")
+
         let accNo = deletedBook.accNo
         await (new deletedbook({category, accNo})).save()
         
@@ -485,8 +491,8 @@ export function deleteImage(fileNames){
 }
 
 export function editImage(fileNames, editedFile){
-    console.log('File names ' + fileNames)
-    let oldBookCover = fileNames[0]
+    if(fileNames && editedFile){
+        let oldBookCover = fileNames[0]
     let newBookCover = fileNames[1]
 
     for(let i = 0; i < editedFile.length; i++){
@@ -499,5 +505,7 @@ export function editImage(fileNames, editedFile){
             }
         }
     }
+    }
+    
 
 }

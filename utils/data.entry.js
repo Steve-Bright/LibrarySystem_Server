@@ -374,9 +374,13 @@ export const BookSchema = {
 
       catalogOwner: Joi.number()
         .label("Catalog Owner")
+        .optional(),
+
+      editedPhoto: Joi.boolean()
+        .label("Editing the image")
         .optional()
     })
-      .or('bookTitle', 'subTitle', 'parallelTitle', 'initial', 'classNo', 'callNo', 'sor', 'isbn', 'authorOne', 'authorTwo', 'authorThree', 'other', 'translator', 'pagination', 'size', 'illustrationType', 'seriesTitle', 'seriesNo', 'includeCD', 'subjectHeadings', 'edition', 'editor', 'place', 'publisher', 'year', 'keywords', 'summary', 'notes', 'source', 'price', 'donor', 'catalogOwner')
+      .or('bookTitle', 'subTitle', 'parallelTitle', 'initial', 'classNo', 'callNo', 'sor', 'isbn', 'authorOne', 'authorTwo', 'authorThree', 'other', 'translator', 'pagination', 'size', 'illustrationType', 'seriesTitle', 'seriesNo', 'includeCD', 'subjectHeadings', 'edition', 'editor', 'place', 'publisher', 'year', 'keywords', 'summary', 'notes', 'source', 'price', 'donor', 'catalogOwner', "editedPhoto")
       .messages({
         "object.missing": "Please specify at least one field to update",
       }),
