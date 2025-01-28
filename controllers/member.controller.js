@@ -1,9 +1,8 @@
 import member from "../model/member.model.js"
 import bannedMemberModel from "../model/banmember.model.js"
-import cron from "node-cron";
-import {fMsg, fError, todayDate, nextYear, paginate} from "../utils/libby.js"
+import {fMsg, fError, todayDate, nextYear, paginate, getAnotherMonth} from "../utils/libby.js"
 import { kayinGyiMembers, kayinGyiMembersBarcode, kayinGyiTemp } from "../utils/directories.js"
-import e from "express"
+import { mapMember } from "../utils/model.mapper.js"
 
 export const addMember = async(req, res, next) => {
     try{
@@ -20,83 +19,27 @@ export const addMember = async(req, res, next) => {
             email,
             permanentAddress,
             currentAddress,
-            note
+            note,
+            expireMonths = 5
         } = req.body
 
-        if(!memberType){
-            return fError(res, "Member type is required")
+
+
+        let duplicatePersonalId = await member.findOne({personalId})
+        if(duplicatePersonalId){
+            return fError(res, "Personal id has already been used as a library member")
         }
 
-        if(memberType == "teacher" || memberType == "staff"){
-            if(!department){
-                return fError(res, "Please enter the department")
-            }else{
-                if(department != "Chinese" && department != "English"){
-                    return fError(res, "Please enter the correct department")
-                }
-            }
 
-            if(!nrc){
-                return fError(res, "Please enter the nrc")
-            }
-
-            if(!email){
-                return fError(res, "Please enter the email")
-            }
-        }else{
-            if(!grade){
-                return fError(res, "Please enter the grade")
-            }
+        let duplicateMemberId = await member.findOne({memberId})
+        if(duplicateMemberId){
+            return fError(res, "Member id is already registered")
         }
 
-        if(!personalId){
-            return fError(res, "Please enter the related personal id, i.e, student id, teacher id or staff id")
-        }else{
-            let duplicateMember = await member.findOne({personalId})
-            if(duplicateMember){
-                return fError(res, "Personal id has already been used as a library member")
-            }
-        }
-
-        if(!memberId){
-            return fError(res, "Please enter the member Id")
-        }else{
-            let duplicateMember = await member.findOne({memberId})
-            if(duplicateMember){
-                return fError(res, "Member id is already registered")
-            }
-        }
-
-        if(!name){
-            return fError(res, "Please enter the name")
-        }
-        
-        if(!gender){
-            return fError(res, "Please enter the gender")
-        }else{
-            if(gender != "male" && gender != "female"){
-                return fError(res, "Wrong gender input")
-            }
-        }
-
-        if(!permanentAddress || !currentAddress){
-            return fError(res, "Please enter the permanent and current address")
-        }
-
-        if(!phone){
-            return fError(res, "Please enter the phone")
-        }
-
-        if(email){
-            let duplicateMember = await member.findOne({email})
-            if(duplicateMember){
-                return fError(res, "Email already registered")
-            }
-        }
 
         if(nrc){
-            let duplicateMember = await member.findOne({nrc})
-            if(duplicateMember){
+            let duplicateNRC = await member.findOne({nrc})
+            if(duplicateNRC){
                 return fError(res, "Nrc already is registered")
             }
         }
@@ -111,7 +54,7 @@ export const addMember = async(req, res, next) => {
 
 
         let issueDate = todayDate();
-        let expiryDate = nextYear()
+        let expiryDate = getAnotherMonth(expireMonths)
 
         const fileName = memberId + "-" + Date.now() + ".png"
         const barcodeName = memberId + "-barcode-" + Date.now() + ".png"
@@ -119,9 +62,8 @@ export const addMember = async(req, res, next) => {
         const barcode = "/KayinGyi/membersBarcodes/" + barcodeName
         const actualMemberPhoto = kayinGyiMembers + fileName
         const actualMemberBarcode = kayinGyiMembersBarcode + barcodeName
-        const newMember = new member({
+        const memberData = mapMember({
             memberType, 
-            department,
             grade,
             personalId,
             memberId, 
@@ -138,11 +80,12 @@ export const addMember = async(req, res, next) => {
             note,
             barcode
         })
+        
+        const newMember = new member(memberData)
 
         await newMember.save();
         fMsg(res, "Member is created successfully", newMember, 200)
         return [actualMemberPhoto, actualMemberBarcode]
-        // if(memberType == "student")
     }catch(error){
         console.log("adding member error " + error)
         next(error)
@@ -154,7 +97,6 @@ export const editMember = async(req, res, next) => {
         const {
             memberType, 
             memberDatabaseId,
-            department,
             grade,
             personalId,
             memberId, 
@@ -228,7 +170,6 @@ export const editMember = async(req, res, next) => {
 
         const updatedMember = await member.findByIdAndUpdate(memberDatabaseId, {
             memberType, 
-            department,
             grade,
             personalId,
             memberId, 

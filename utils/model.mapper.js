@@ -45,3 +45,33 @@ export function mapBook(bookModel) {
     Object.entries(bookObject).filter(([key, value]) => value !== "" && value != null)
   );
 }
+
+export function mapMember(memberModel) {
+  let memberObject = {
+    memberType: memberModel.memberType,
+    grade: memberModel.grade,
+    personalId: memberModel.personalId,
+    memberId: memberModel.memberId,
+    name: memberModel.name,
+    nrc: memberModel.nrc,
+    gender: memberModel.gender,
+    phone: memberModel.phone,
+    email: memberModel.email,
+    permanentAddress: memberModel.permanentAddress,
+    currentAddress: memberModel.currentAddress,
+    photo: memberModel.photo,
+    issueDate: memberModel.issueDate,
+    extendDate: memberModel.extendDate,
+    expiryDate: memberModel.expiryDate,
+    note: memberModel.note,
+    block: memberModel.block,
+    barcode: memberModel.barcode,
+    loanBooks: memberModel.loanBooks,
+    createdAt: memberModel.createdAt,
+    updatedAt: memberModel.updatedAt
+  };
+
+  return Object.fromEntries(
+    Object.entries(memberObject).filter(([key, value]) => value !== "" && value != null)
+  );
+}
