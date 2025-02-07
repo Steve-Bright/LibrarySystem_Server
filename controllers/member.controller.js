@@ -107,24 +107,10 @@ export const editMember = async(req, res, next) => {
             email,
             permanentAddress,
             currentAddress,
-            note
+            note,
+            editedPhoto
         } = req.body
 
-        console.log(req.body)
-
-        if(!memberType){
-            return fError(res, "Member type is required")
-        }
-
-        if(!memberDatabaseId){
-            return fError(res, "Member id from _id is required")
-        }
-
-        //becareful here, cuz, if the user just update the photo, there might be error here
-        if(!department && !grade && !personalId && !memberId && !name && !nrc && !gender 
-            && !phone && !email && !permanentAddress && !currentAddress && !note && !req.file){
-                return fError(res, "Please enter at least one variable to update")
-            }
         
         const memberFound = await member.findById(memberDatabaseId)
         const memberIdFound = memberFound.memberId;
@@ -149,9 +135,11 @@ export const editMember = async(req, res, next) => {
             }
         }
 
-        const sameEmail = await member.findOne({email})
-        if(sameEmail){
-            return fError(res, "There is already same email")
+        if(email){
+            const sameEmail = await member.findOne({email})
+            if(sameEmail){
+                return fError(res, "There is already same email")
+            }   
         }
 
         const samePhone = await member.findOne({phone})
@@ -162,7 +150,7 @@ export const editMember = async(req, res, next) => {
         let fileName;
         let memberPhoto
         let actualMemberPhoto
-        if(req.file){
+        if(editedPhoto && req.file){
             fileName = memberIdFound + "-" + Date.now() + ".png"
             memberPhoto = "/KayinGyi/members/" + fileName
             actualMemberPhoto = kayinGyiMembers + fileName
@@ -385,7 +373,7 @@ export const checkBannedMembers = async(req, res, next) => {
 
 export const searchMember = async(req, res, next) => {
     try{
-        const {memberType, name, memberId, personalId} = req.query;
+        const {memberType, name, memberId, personalId} = req.body;
 
         if(!memberType && !name && !memberId && !personalId){
             return fError(res, "Please specify at least one field")
