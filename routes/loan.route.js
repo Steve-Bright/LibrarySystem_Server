@@ -1,7 +1,6 @@
 import express from "express";
 import { addLoan, checkLoan, deleteLoan, returnLoan, searchLoan, extendLoan, getAllLoans, getLoanDetail, getTodayDeadlineLoan, getWeeklyLoans, getMonthlyLoans} from "../controllers/loan.controller.js";
 import { validateToken, isManager } from "../utils/validator.js"
-import { validate } from "node-cron";
 
 
 const router = express.Router()

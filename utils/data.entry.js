@@ -1,20 +1,56 @@
 import Joi from "joi"
 
 export const MemberSchema = {
-    register:Joi.object({
-        memberType: Joi.valid("student", "teacher", "staff").messages({
-          "any.only": "Invalid member type. Allowed values are 'student', 'teacher', or 'staff'."
-        }),
-        personalId: Joi.string(),
-        name: Joi.string(),
-        gender: Joi.string(),
-        department: Joi.string(),
-        grade: Joi.string(),
-        phone: Joi.string(),
-        email: Joi.string().optional(),
-        permanentAddress: Joi.string(),
-        currentAddress: Joi.string(),
-        note:Joi.string().allow(null, "").optional(),
+    register:
+      Joi.object({
+        memberType: Joi.string()
+          .valid("student","teacher", "staff", "public")
+          .label("Member Type")
+          .required(),
+
+        personalId: Joi.when("memberType", {
+          is: "student",
+          then: Joi.string().required(),
+          otherwise: Joi.optional()
+        })
+        .label("Personal Id"),
+        
+        name: Joi.string()
+          .label("Member's name")
+          .required(),
+        
+        gender: Joi.string()
+          .valid("male", "female")
+          .label("Gender")
+          .required(),
+          
+        grade: Joi.when("memberType", {
+          is: "student",
+          then: Joi.string().required(),
+          otherwise: Joi.forbidden()
+        }).label("Student's current Grade"),
+
+        phone: Joi.string()
+          .label("Member's phone num")
+          .required(),
+
+        email: Joi.string()
+          .label("Member's email")
+          .optional(),
+
+        permanentAddress: Joi.string()
+          .label("Permanent address")
+          .required(),
+
+        currentAddress: Joi.string()
+          .label("Current address")
+          .required(),
+
+        note:Joi.string()
+          .label("Note")
+          // .allow(null, "")
+          .optional(),
+
         memberId: Joi.when("memberType", {
             is: "student",
             then: Joi.string()
@@ -41,15 +77,27 @@ export const MemberSchema = {
                   "string.pattern.base": "Incorrect Member format 'ST-XXXXX'"
                 })
                 .required(),
-            }),
+            })
+            .when("memberType", {
+              is: "public", 
+              then: Joi.string()
+                .pattern(/^P-\d{5}$/) // P-00001 to P-99999
+                .message({
+                  "string.pattern.base": "Incorrect Member format 'P-XXXXX'"
+                })
+                .required()
+            })
+            .label("Member Id"),
         nrc: Joi.when("memberType", {
-            is: Joi.valid("teacher", "staff"),
+            is: Joi.valid("public", "teacher", "staff"),
             then: Joi
             .string()
             .pattern(/^([1-9]|1[0-4])\/[A-Za-z]+\([A-Za-z]+\)\d{6}$/)
             .message({
               "string.pattern.base": "Incorrect NRC Format"
-            }),
+            })
+            .required(),
+
             otherwise: Joi
             .string()
             .allow(null, "")
@@ -59,8 +107,132 @@ export const MemberSchema = {
             })
             .optional(),
 
-        })
-    })
+        }).label("NRC number"),
+
+        expireMonths: Joi.number()
+          .min(1)
+          .max(12)
+          .optional()
+    }),
+
+    edit: 
+      Joi.object({
+        memberType: Joi.string()
+          .valid("student","teacher", "staff", "public")
+          .label("Member Type")
+          .required(),
+        
+        memberDatabaseId: Joi.string()
+          .label("Member Database Id")
+          .required(),
+        
+        personalId: Joi.string()
+          .optional()
+          .label("Personal Id"),
+        
+        name: Joi.string()
+          .label("Member's name")
+          .optional(),
+        
+        gender: Joi.string()
+          .valid("male", "female")
+          .label("Gender")
+          .optional(),
+          
+        grade: Joi.when("memberType", {
+          is: "student",
+          then: Joi.string().optional(),
+          otherwise: Joi.forbidden()
+        }).label("Student's current Grade"),
+
+        phone: Joi.string()
+          .label("Member's phone num")
+          .optional(),
+
+        email: Joi.string()
+          .label("Member's email")
+          .optional(),
+
+        permanentAddress: Joi.string()
+          .label("Permanent address")
+          .optional(),
+
+        currentAddress: Joi.string()
+          .label("Current address")
+          .optional(),
+
+        note:Joi.string()
+          .label("Note")
+          // .allow(null, "")
+          .optional(),
+
+        memberId: Joi.when("memberType", {
+            is: "student",
+            then: Joi.string()
+              .pattern(/^S-\d{5}$/) // S-00001 to S-99999
+              .message({
+                "string.pattern.base": "Incorrect Member format 'S-XXXXX'"
+              })
+              .optional(),
+          })
+            .when("memberType", {
+              is: "teacher",
+              then: Joi.string()
+                .pattern(/^T-\d{5}$/) // T-00001 to T-99999
+                .message({
+                  "string.pattern.base": "Incorrect Member format 'T-XXXXX'"
+                })
+                .optional(),
+            })
+            .when("memberType", {
+              is: "staff",
+              then: Joi.string()
+                .pattern(/^ST-\d{5}$/) // ST-00001 to ST-99999
+                .message({
+                  "string.pattern.base": "Incorrect Member format 'ST-XXXXX'"
+                })
+                .optional(),
+            })
+            .when("memberType", {
+              is: "public", 
+              then: Joi.string()
+                .pattern(/^P-\d{5}$/) // P-00001 to P-99999
+                .message({
+                  "string.pattern.base": "Incorrect Member format 'P-XXXXX'"
+                })
+                .optional()
+            })
+            .label("Member Id"),
+        nrc: Joi.when("memberType", {
+            is: Joi.valid("public", "teacher", "staff"),
+            then: Joi
+            .string()
+            .pattern(/^([1-9]|1[0-4])\/[A-Za-z]+\([A-Za-z]+\)\d{6}$/)
+            .message({
+              "string.pattern.base": "Incorrect NRC Format"
+            })
+            .optional(),
+
+            otherwise: Joi
+            .string()
+            .allow(null, "")
+            .pattern(/^([1-9]|1[0-4])\/[A-Za-z]+\([A-Za-z]+\)\d{6}$/)
+            .message({
+              "string.pattern.base": "Incorrect NRC Format"
+            })
+            .optional(),
+
+        }),
+
+        editedPhoto: Joi.boolean()
+        .label("Editing the photo")
+        .optional()
+          
+      }).or( "name", "phone", "email", "permanentAddress", "currentAddress", "note", "nrc", "grade", "memberId", "personalId", "gender"
+      ) // At least one of these fields must be present
+      .messages({
+        "object.missing": "Please specify at least one field to update",
+      })
 }
 
 export const BookSchema = {
