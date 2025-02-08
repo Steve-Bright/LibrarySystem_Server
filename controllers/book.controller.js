@@ -3,7 +3,7 @@ import engbook from "../model/engbook.model.js"
 import deletedbook from "../model/deletedbook.model.js"
 import {fMsg, fError, paginate} from "../utils/libby.js"
 import {kayinGyiBooks, kayinGyiBooksBarcode, kayinGyiTemp, homeDirectory  } from "../utils/directories.js"
-import { mapBook } from "../utils/book.mapper.js"
+import { mapBook } from "../utils/model.mapper.js"
 import {moveFile, deleteFile} from "../utils/libby.js"
 
 

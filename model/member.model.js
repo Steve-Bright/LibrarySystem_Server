@@ -3,13 +3,8 @@ import mongoose from "mongoose";
 const memberSchema = new mongoose.Schema({
     memberType: {
         type: String,
-        enum: ["student", "teacher", "staff"],
+        enum: ["student", "teacher", "staff", "public"],
         required: true
-    },
-    department: {
-        type: String,
-        index: true, 
-        enum: ["Chinese", "English"]
     },
     grade: {
         type: String,
@@ -17,7 +12,6 @@ const memberSchema = new mongoose.Schema({
     },
     personalId: {
         type: String,
-        required: true,
         unique: true,
         index: true 
     },
@@ -33,7 +27,10 @@ const memberSchema = new mongoose.Schema({
         index: true
     },
     nrc: {
-        type: String
+        type: String,
+        unique: true, 
+        index: true,
+        sparse: true
     },
     gender: {
         type: String, 
@@ -42,10 +39,12 @@ const memberSchema = new mongoose.Schema({
     },
     phone: {
         type: String,
-        required: true
+        required: true,
     },
     email: {
-        type: String
+        type: String,
+        unique: true,
+        sparse: true
     },
     permanentAddress: {
         required: true,

@@ -116,6 +116,19 @@ export const nextYear = () => {
     return Date.parse(nextYear);
 }
 
+export const getAnotherMonth = (nextMonths = 1) => {
+    let today = new Date();
+
+    today.setMonth(today.getMonth() + nextMonths);
+
+    // Format day, month, and year
+    let dd = String(today.getDate()).padStart(2, '0');
+    let mm = String(today.getMonth() + 1).padStart(2, '0'); // January is 0!
+    let yyyy = today.getFullYear();
+
+    return `${yyyy}-${mm}-${dd}`;
+}
+
 export const getWeeklyDates = ()=> {
     let today = new Date();
     today.setHours(0, 0, 0, 0)
