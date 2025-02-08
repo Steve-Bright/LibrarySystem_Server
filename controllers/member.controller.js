@@ -292,7 +292,7 @@ export const getAllMembers = async(req, res, next) => {
         if(memberType){
             filter = {memberType}
         }
-        const members = await paginate(member, filter, page)
+        const members = await paginate(member, null, page, 10, "createdAt")
         fMsg(res, "Members fetched successfully", members, 200)
     }catch(error){
         console.log('get all members ' + error)
