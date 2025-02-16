@@ -8,7 +8,6 @@ export const addMember = async(req, res, next) => {
     try{
         const {
             memberType, 
-            department,
             grade,
             personalId,
             memberId, 
@@ -41,6 +40,13 @@ export const addMember = async(req, res, next) => {
             let duplicateNRC = await member.findOne({nrc})
             if(duplicateNRC){
                 return fError(res, "Nrc already is registered")
+            }
+        }
+
+        if(email){
+            let duplicateEmail = await member.findOne({email})
+            if(duplicateEmail){
+                return fError(res, "Email is already registered")
             }
         }
 
@@ -204,7 +210,7 @@ export const getMember = async(req, res, next) => {
 
         const memberFound = await member.findOne(memberData)
         if(!memberFound){
-            return fError(res, "There is no such member", 404)
+            return fError(res, "There is no such member", 400)
         }
 
         fMsg(res, "Member fetched successfully", memberFound, 200)

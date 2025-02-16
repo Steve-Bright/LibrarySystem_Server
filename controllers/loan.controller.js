@@ -202,6 +202,7 @@ export const deleteLoan = async(req, res, next) => {
 
 export const searchLoan = async(req, res, next) => {
     try{
+        const {loanType = 'all'} = req.query;
         const {accNo, memberId, bookTitle, name, loanDate, dueDate} = req.body;
 
         if(!accNo && !memberId && !bookTitle && !name && !loanDate && !dueDate) {
@@ -245,17 +246,35 @@ export const searchLoan = async(req, res, next) => {
                 }
             }
 
+            if(engBooks.length == 0 && mmBooks.length == 0){
+                return fError(res, "Loan not found with such book name ", 400)
+            }
+
         }
 
         let memberFound;
         let memberIds = []
         if(memberFields != {}){
             memberFound = await member.find(memberFields).exec()
+            if(!memberFound || memberFound.length === 0){
+                return fError(res, "Loan not found with such name", 400)
+            }
             for(let eachMember of memberFound){
                 memberIds.push(eachMember)
             }
         }
         let loanQuery = {};
+
+        switch(loanType){
+            case "today": loanQuery = {dueDate: todayDate(), loanStatus: true}
+            break;
+            case "overdue": loanQuery = { dueDate: { $lt: todayDate() }, loanStatus: true }
+            break;
+            case "other": loanQuery = { dueDate: {$gt: todayDate()}, loanStatus: true }
+            break;
+            default: loanQuery = {}
+            break;
+        }
         if (combineBooks.length > 0) {
             loanQuery["bookId"] = { $in: combineBooks };
         }
@@ -263,7 +282,10 @@ export const searchLoan = async(req, res, next) => {
             loanQuery["memberId"] = { $in: memberIds };
         }
 
-        const loans = await loanModel.find(loanQuery).exec();
+        const loans = await loanModel.find(loanQuery)
+        .populate("memberId", "name memberType phone memberId")
+        .populate("bookId", "category callNo bookTitle")
+        .exec();
 
         fMsg(res, "This is the loan you searched", loans, 200)
         
@@ -275,8 +297,21 @@ export const searchLoan = async(req, res, next) => {
 
 export const getAllLoans = async(req, res, next) => {
     try{
-        const {page} = req.query;
+        const {loanType = "all", page} = req.query;
         let sortField = "dueDate";
+        let filter = {};
+
+        switch(loanType){
+            case "today": filter = {dueDate: todayDate(), loanStatus: true}
+            break;
+            case "overdue": filter = { dueDate: { $lt: todayDate() }, loanStatus: true }
+            break;
+            case "other": filter = { dueDate: {$gt: todayDate()}, loanStatus: true }
+            break;
+            default: filter = {}
+            break;
+        }
+
         let populate = {
             memberId: "name memberType phone memberId",
             bookId: "category callNo bookTitle"
@@ -292,7 +327,7 @@ export const getAllLoans = async(req, res, next) => {
 
         const loans = await paginate(
             loanModel, 
-            {}, 
+            filter, 
             1,
             10,
             sortField,
