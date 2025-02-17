@@ -3,6 +3,7 @@ import bannedMemberModel from "../model/banmember.model.js"
 import {fMsg, fError, todayDate, nextYear, paginate, getAnotherMonth} from "../utils/libby.js"
 import { kayinGyiMembers, kayinGyiMembersBarcode, kayinGyiTemp } from "../utils/directories.js"
 import { mapMember } from "../utils/model.mapper.js"
+import Loan from "../model/loan.model.js"
 
 export const addMember = async(req, res, next) => {
     try{
@@ -417,6 +418,19 @@ export const searchMember = async(req, res, next) => {
         fMsg(res, "Member is found", memberFound, 200)
     }catch(error){
         console.log("search member error " + error)
+        next(error)
+    }
+}
+
+export const getMemberLoanHistory = async(req, res, next) => {
+    try{
+        const memberId = req.params.memberId;
+        const loanHistories = await Loan.find({memberId})
+                .populate("bookId", "bookTitle category")
+                .populate("memberId", "memberId name")
+        fMsg(res, "Loan History", loanHistories, 200)        
+    }catch(error){
+        console.log('get member loan history error ' + error)
         next(error)
     }
 }

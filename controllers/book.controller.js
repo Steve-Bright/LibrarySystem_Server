@@ -1,5 +1,6 @@
 import mmbook from "../model/mmbook.model.js"
 import engbook from "../model/engbook.model.js"
+import Loan from "../model/loan.model.js"
 import deletedbook from "../model/deletedbook.model.js"
 import {fMsg, fError, paginate} from "../utils/libby.js"
 import {kayinGyiBooks, kayinGyiBooksBarcode, kayinGyiTemp, homeDirectory  } from "../utils/directories.js"
@@ -466,6 +467,21 @@ export const searchBook = async(req, res, next) => {
         console.log("search book error " + error)
         next(error)
     }
+}
+
+export const getBookLoanHistory = async(req, res, next) =>{
+  try{
+    const bookId = req.params.bookId;
+    const loanHistories = await Loan.find({bookId})
+            .populate("bookId", "bookTitle category")
+            .populate("memberId", "memberId name")
+
+    fMsg(res, "Loan History", loanHistories, 200)
+
+  }catch(error){
+    console.log("get book loan history error " + error)
+    next(error)
+  }
 }
 
 export function moveImage(directory, fileNames){
