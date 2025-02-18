@@ -1,5 +1,5 @@
 import express from "express";
-import { addBook, deleteBook, editBook, getAllBooks, getBook, moveImage, getLatestAccNo, searchBook, deleteImage, editImage, getBookLoanHistory } from "../controllers/book.controller.js"
+import { addBook, deleteBook, editBook, getAllBooks, getBook, moveImage, getLatestAccNo, searchBook, deleteImage, editImage, getBookLoanHistory, numOfBooks } from "../controllers/book.controller.js"
 import {  validateToken, isManager, validateBody } from "../utils/validator.js"
 import { upload } from "../multerStorage.js"
 import { BookSchema } from "../utils/data.entry.js";
@@ -28,5 +28,6 @@ router.get("/getBook", validateToken(), getBook)
 router.delete('/deleteBook', validateToken(), isManager(), (req, res, next) => deleteBook(req, res, next).then((fileNames) => deleteImage(fileNames)))
 router.get("/getLatestAccNo/:category", validateToken(), getLatestAccNo);
 router.post("/searchBook", validateToken(), searchBook)
+router.get("/totalNum/:duration", validateToken(), numOfBooks);
 
 export default router;

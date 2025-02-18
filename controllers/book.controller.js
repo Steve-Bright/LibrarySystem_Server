@@ -484,6 +484,36 @@ export const getBookLoanHistory = async(req, res, next) =>{
   }
 }
 
+export const numOfBooks = async(req, res, next) => {
+    try{
+        const duration = req.params.duration;
+        const todayDate = new Date();
+        let adjustDate;
+
+        switch (duration){
+            case "weekly": 
+                adjustDate = {$gte: (todayDate.getDate() - 7)}
+                break;
+            case "monthly":
+                adjustDate =  {$gte: (todayDate.getDate() - 30)}
+                break;
+            case "all":
+                adjustDate = {}
+                break;
+        }
+        let totalBooks = {};
+        let mmbooks = await mmbook.countDocuments(adjustDate);
+        let engbooks = await engbook.countDocuments(adjustDate)
+
+        totalBooks = {total: (mmbooks+engbooks), mm: mmbooks, eng: engbooks}
+        fMsg(res, "Total Number of books", totalBooks, 200)
+
+    }catch(error){
+        console.log("error number of books " + error)
+        next(error)
+    }
+}
+
 export function moveImage(directory, fileNames){
     if(directory && fileNames){
         for(let i = 0; i < fileNames.length; i++){

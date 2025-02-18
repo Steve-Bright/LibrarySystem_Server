@@ -328,7 +328,7 @@ export const getAllLoans = async(req, res, next) => {
         const loans = await paginate(
             loanModel, 
             filter, 
-            1,
+            page,
             10,
             sortField,
             populateString
@@ -401,6 +401,50 @@ export const getTodayDeadlineLoan = async(req, res, next) => {
         fMsg(res, "Today deadline's Loans", todayLoans, 200) 
     }catch(error){
         console.log("get today deadline loan error " + error)
+        next(error)
+    }
+}
+
+export const getLoanHistory = async(req, res, next) => {
+    try{
+        const {memberId, bookId, page} = req.query
+        
+        let filter = {}
+        if(!memberId && !bookId){
+            return fError(res, "Need at least one value to check history")
+        }
+
+        if(memberId){
+            filter["memberId"] = memberId
+        }else if(bookId){
+            filter["bookId"] = bookId
+        }
+
+        let populate = {
+            memberId: "name memberType phone memberId",
+            bookId: "category callNo bookTitle"
+        }
+
+        const populateString = Object.entries(populate).map(
+            ([path, select]) => ({
+                path,
+                select,
+            })
+        );
+
+        const loanHistory = await paginate(
+            loanModel,
+            filter,
+            page,
+            10,
+            "dueDate",
+            populateString
+        )
+
+        fMsg(res, "Loan History " , loanHistory, 200)
+
+    }catch(error){
+        console.log("loan history error " + error)
         next(error)
     }
 }
