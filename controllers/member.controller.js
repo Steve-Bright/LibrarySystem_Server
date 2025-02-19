@@ -1,6 +1,6 @@
 import member from "../model/member.model.js"
 import bannedMemberModel from "../model/banmember.model.js"
-import {fMsg, fError, todayDate, nextYear, paginate, getAnotherMonth} from "../utils/libby.js"
+import {fMsg, fError, todayDate, nextYear, paginate, getAnotherMonth, getWeeklyDates, getMonthlyDates} from "../utils/libby.js"
 import { kayinGyiMembers, kayinGyiMembersBarcode, kayinGyiTemp } from "../utils/directories.js"
 import { mapMember } from "../utils/model.mapper.js"
 import Loan from "../model/loan.model.js"
@@ -431,6 +431,51 @@ export const getMemberLoanHistory = async(req, res, next) => {
         fMsg(res, "Loan History", loanHistories, 200)        
     }catch(error){
         console.log('get member loan history error ' + error)
+        next(error)
+    }
+}
+
+export const numOfMembers = async(req, res, next) => {
+    try{
+        const duration = req.params.duration;
+        let adjustDate;
+
+        switch(duration){
+            case "weekly": 
+                adjustDate = {createdAt: {$gte: getWeeklyDates().startOfWeek}}
+                break;
+            case "monthly":
+                adjustDate =  {createdAt: {$gte: getMonthlyDates().startOfMonth}}
+                break;
+            case "all":
+                adjustDate = {}
+                break;
+        }
+        let totalMembers = {}
+        let teacherField = {...adjustDate};
+        teacherField["memberType"] = "teacher"
+
+        let studentField = {...adjustDate};
+        studentField["memberType"] = "student"
+
+        let staffField = {...adjustDate};
+        staffField["memberType"] = "staff"
+
+        let publicField = {...adjustDate};
+        publicField["memberType"] = "public"
+
+
+        console.log(JSON.stringify(studentField))
+
+        totalMembers["total"] = await member.countDocuments(adjustDate)
+        totalMembers["teachers"] = await member.countDocuments(teacherField)
+        totalMembers["students"] = await member.countDocuments(studentField)
+        totalMembers["staffs"] = await member.countDocuments(staffField)
+        totalMembers["public"] = await member.countDocuments(publicField)
+
+        fMsg(res, "Number of members", totalMembers, 200)
+    }catch(error){
+        console.log("number of members error " + error)
         next(error)
     }
 }

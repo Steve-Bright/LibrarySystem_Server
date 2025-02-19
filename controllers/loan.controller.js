@@ -385,7 +385,7 @@ export const numOfLoans = async(req, res, next) => {
                 adjustDate = {dueDate: {$gte: getWeeklyDates().startOfWeek, $lt: getWeeklyDates().endOfWeek}}
                 break;
             case "monthly":
-                allLoans = {createdAt: {$gte: etMonthlyDates().startOfMonth}}
+                allLoans = {createdAt: {$gte: getMonthlyDates().startOfMonth}}
                 adjustDate = {dueDate: {$gte: getMonthlyDates().startOfMonth, $lt: getMonthlyDates().endOfMonth}}
                 break;
             case "all":
@@ -395,11 +395,11 @@ export const numOfLoans = async(req, res, next) => {
         let totalLoans = await loanModel.countDocuments(allLoans)
         let toReturns = await loanModel.countDocuments(adjustDate)
 
-        let overDueField = adjustDate;
+        let overDueField = {...adjustDate};
         overDueField["overdue"] = true;
         let overdueLoans = await loanModel.countDocuments(overDueField)
 
-        let total = {total: totalLoans, overdue: overdueLoans, toReturn: toReturns}
+        let total = {newLoans: totalLoans, overdue: overdueLoans, toReturn: toReturns}
         fMsg(res, "Total Number of Loans ", total, 200)
     }catch(error){
         console.log("number of loans error "+ error)
