@@ -2,7 +2,7 @@ import mmbook from "../model/mmbook.model.js"
 import engbook from "../model/engbook.model.js"
 import Loan from "../model/loan.model.js"
 import deletedbook from "../model/deletedbook.model.js"
-import {fMsg, fError, paginate} from "../utils/libby.js"
+import {fMsg, fError, paginate, getWeeklyDates, getMonthlyDates} from "../utils/libby.js"
 import {kayinGyiBooks, kayinGyiBooksBarcode, kayinGyiTemp, homeDirectory  } from "../utils/directories.js"
 import { mapBook } from "../utils/model.mapper.js"
 import {moveFile, deleteFile} from "../utils/libby.js"
@@ -486,16 +486,15 @@ export const getBookLoanHistory = async(req, res, next) =>{
 
 export const numOfBooks = async(req, res, next) => {
     try{
-        const duration = req.params.duration;
-        const todayDate = new Date();
+        const duration = req.params.duration
         let adjustDate;
 
         switch (duration){
             case "weekly": 
-                adjustDate = {$gte: (todayDate.getDate() - 7)}
+                adjustDate = {createdAt: {$gte: getWeeklyDates().startOfWeek}}
                 break;
             case "monthly":
-                adjustDate =  {$gte: (todayDate.getDate() - 30)}
+                adjustDate =  {createdAt: {$gte: getMonthlyDates().startOfMonth}}
                 break;
             case "all":
                 adjustDate = {}

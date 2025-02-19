@@ -41,6 +41,8 @@ const loanSchema = new mongoose.Schema({
         default: false,
         index: true
     }
+}, {
+    timestamps: { createdAt: true, updatedAt: false }
 });
 
 export default mongoose.model("loan", loanSchema);
