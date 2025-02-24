@@ -1,4 +1,5 @@
 import member from "../model/member.model.js"
+import banMemberModel from "../model/banmember.model.js"
 import bannedMemberModel from "../model/banmember.model.js"
 import {fMsg, fError, todayDate, nextYear, paginate, getAnotherMonth, getWeeklyDates, getMonthlyDates} from "../utils/libby.js"
 import { kayinGyiMembers, kayinGyiMembersBarcode, kayinGyiTemp } from "../utils/directories.js"
@@ -135,7 +136,10 @@ export const editMember = async(req, res, next) => {
             return fError(res, "There is already duplicate member id ")
         }
 
-        if(nrc){
+        if(nrc == ""){
+            memberFound.nrc = undefined;
+            await memberFound.save()
+        }else if(nrc && nrc != ''){
             const sameNrc = await member.findOne({nrc})
             if(sameNrc){
                 return fError(res, "There is already duplicate nrc")
@@ -163,7 +167,7 @@ export const editMember = async(req, res, next) => {
             actualMemberPhoto = kayinGyiMembers + fileName
         }
 
-        const updatedMember = await member.findByIdAndUpdate(memberDatabaseId, {
+        const updatedMemberData = mapMember({
             memberType, 
             grade,
             personalId,
@@ -177,7 +181,9 @@ export const editMember = async(req, res, next) => {
             currentAddress,
             photo: memberPhoto,
             note
-        }, {new: true})
+        })
+
+        const updatedMember = await member.findByIdAndUpdate(memberDatabaseId, updatedMemberData , {new: true})
 
         await updatedMember.save();
         fMsg(res, "Member is edited successfully", updatedMember, 200)
@@ -268,6 +274,8 @@ export const getLatestMemberId = async(req, res, next) => {
             case "student": prefix = "S"
             break;
             case "staff": prefix = "ST"
+            break;
+            case "public": prefix = "P"
             break;
             default: 
                 return fError(res, "Wrong memberType value")
@@ -476,6 +484,20 @@ export const numOfMembers = async(req, res, next) => {
         fMsg(res, "Number of members", totalMembers, 200)
     }catch(error){
         console.log("number of members error " + error)
+        next(error)
+    }
+}
+
+export const checkBanUntil = async(req, res, next) => {
+    try{
+        const memberDatabaseId = req.params.id;
+        const member = await banMemberModel.findOne({memberId: memberDatabaseId})
+        if(!member){
+            return fError(res, "Member not found", 400)
+        }
+        fMsg(res, "Member is banned until", member, 200)
+    }catch(error){
+        console.log("ban until error ? " + error)
         next(error)
     }
 }

@@ -120,7 +120,8 @@ export const MemberSchema = {
         memberType: Joi.string()
           .valid("student","teacher", "staff", "public")
           .label("Member Type")
-          .required(),
+          .optional()
+          ,
         
         memberDatabaseId: Joi.string()
           .label("Member Database Id")
@@ -166,42 +167,7 @@ export const MemberSchema = {
           // .allow(null, "")
           .optional(),
 
-        memberId: Joi.when("memberType", {
-            is: "student",
-            then: Joi.string()
-              .pattern(/^S-\d{5}$/) // S-00001 to S-99999
-              .message({
-                "string.pattern.base": "Incorrect Member format 'S-XXXXX'"
-              })
-              .optional(),
-          })
-            .when("memberType", {
-              is: "teacher",
-              then: Joi.string()
-                .pattern(/^T-\d{5}$/) // T-00001 to T-99999
-                .message({
-                  "string.pattern.base": "Incorrect Member format 'T-XXXXX'"
-                })
-                .optional(),
-            })
-            .when("memberType", {
-              is: "staff",
-              then: Joi.string()
-                .pattern(/^ST-\d{5}$/) // ST-00001 to ST-99999
-                .message({
-                  "string.pattern.base": "Incorrect Member format 'ST-XXXXX'"
-                })
-                .optional(),
-            })
-            .when("memberType", {
-              is: "public", 
-              then: Joi.string()
-                .pattern(/^P-\d{5}$/) // P-00001 to P-99999
-                .message({
-                  "string.pattern.base": "Incorrect Member format 'P-XXXXX'"
-                })
-                .optional()
-            })
+        memberId: Joi.forbidden()
             .label("Member Id"),
         nrc: Joi.when("memberType", {
             is: Joi.valid("public", "teacher", "staff"),
@@ -211,7 +177,7 @@ export const MemberSchema = {
             .message({
               "string.pattern.base": "Incorrect NRC Format"
             })
-            .optional(),
+            .required(),
 
             otherwise: Joi
             .string()
@@ -228,7 +194,7 @@ export const MemberSchema = {
         .label("Editing the photo")
         .optional()
           
-      }).or( "name", "phone", "email", "permanentAddress", "currentAddress", "note", "nrc", "grade", "memberId", "personalId", "gender"
+      }).or("memberType", "name", "phone", "email", "permanentAddress", "currentAddress", "note", "nrc", "grade", "memberId", "personalId", "gender", "editedPhoto"
       ) // At least one of these fields must be present
       .messages({
         "object.missing": "Please specify at least one field to update",

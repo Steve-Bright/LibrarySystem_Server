@@ -1,6 +1,6 @@
 import express from "express"
 import { moveImage } from "../controllers/book.controller.js"
-import { addMember, checkBannedMembers, deleteMember, editMember, extendMembership, getAllMembers, getLatestMemberId, getMember, toggleBanMember, searchMember, getMemberLoanHistory, numOfMembers } from "../controllers/member.controller.js"
+import { addMember, checkBannedMembers, deleteMember, editMember, extendMembership, getAllMembers, getLatestMemberId, getMember, toggleBanMember, searchMember, getMemberLoanHistory, numOfMembers, checkBanUntil } from "../controllers/member.controller.js"
 import {validateToken, isManager, validateBody} from "../utils/validator.js"
 import {MemberSchema} from "../utils/data.entry.js"
 import { upload } from "../multerStorage.js"
@@ -23,4 +23,5 @@ router.get("/getLatestMemberId/:memberType", validateToken(), getLatestMemberId)
 router.get("/checkBannedMembers", validateToken(), checkBannedMembers)
 router.post("/searchMember", validateToken(), searchMember)
 router.get("/totalNum/:duration", validateToken(), numOfMembers)
+router.get("/checkBanUntil/:id", validateToken(), checkBanUntil)
 export default router;

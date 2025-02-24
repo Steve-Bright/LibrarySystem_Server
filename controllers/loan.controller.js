@@ -416,7 +416,7 @@ export const getLoanDetail = async(req, res, next) => {
 
         const loanDetail = await loanModel
                                 .findById(loanId)
-                                .populate("memberId", "name photo memberId memberType phone")
+                                .populate("memberId", "name photo memberId memberType phone block")
                                 .populate("bookId", "bookCover bookTitle callNo category")
         if(!loanDetail){
             return fError(res, "Loan not found", 404)
