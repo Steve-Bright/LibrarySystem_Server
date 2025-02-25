@@ -1,7 +1,17 @@
 import multer from 'multer';
-import { kayinGyiTemp } from "./utils/directories.js"
+import { kayinGyiCSVFile, kayinGyiTemp } from "./utils/directories.js"
 
 // let fileName = [];
+
+const csvStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, kayinGyiCSVFile);
+    },
+    filename: (req, file, cb) => {
+        console.log(file.originalname)
+        cb(null, file.originalname);
+    }
+});
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -14,7 +24,6 @@ const storage = multer.diskStorage({
         // fileName.push(generatedName)
         if(!req.fileNames) req.fileNames = []
         req.fileNames.push(generatedName)
-        console.log("this is request filenames: " + req.fileNames)
         cb(null, generatedName);
     }
 });
@@ -30,5 +39,16 @@ const upload = multer({
     }
 });
 
+const csvUpload = multer({
+    storage: csvStorage,
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = ["text/csv", "application/vnd.ms-excel"];
+        if (!allowedTypes.includes(file.mimetype)) {
+            return cb(new Error("Either CSV files or Excel files are allowed"), false);
+        }
+        cb(null, true);
+    }
+})
+
 // Export the upload middleware and fileName for use in other files
-export { upload};
+export { upload, csvUpload};

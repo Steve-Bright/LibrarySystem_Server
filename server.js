@@ -13,7 +13,7 @@ import bookRoute from "./routes/book.route.js"
 import memberRoute from "./routes/member.route.js"
 import loanRoute from "./routes/loan.route.js"
 import connectToMongoDB  from "./config/connectMongoDb.js"
-import {kayinGyiDirectory, kayinGyiBooks, kayinGyiMembers, kayinGyiTemp, kayinGyiBooksBarcode, kayinGyiMembersBarcode} from "./utils/directories.js"
+import {kayinGyiDirectory, kayinGyiBooks, kayinGyiMembers, kayinGyiTemp, kayinGyiBooksBarcode, kayinGyiMembersBarcode, kayinGyiCSVFile} from "./utils/directories.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -41,6 +41,10 @@ if(!fs.existsSync(kayinGyiBooksBarcode)){
 
 if(!fs.existsSync(kayinGyiMembersBarcode)){
     fs.mkdirSync(kayinGyiMembersBarcode)
+}
+
+if(!fs.existsSync(kayinGyiCSVFile)){
+    fs.mkdirSync(kayinGyiCSVFile)
 }
 
 

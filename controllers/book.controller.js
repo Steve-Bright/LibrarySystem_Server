@@ -1,12 +1,18 @@
 import mmbook from "../model/mmbook.model.js"
 import engbook from "../model/engbook.model.js"
 import Loan from "../model/loan.model.js"
+import csvParser from "csv-parser"
+import fs from "fs"
+import path from "path"
+import { fileURLToPath } from "url"
 import deletedbook from "../model/deletedbook.model.js"
 import {fMsg, fError, paginate, getWeeklyDates, getMonthlyDates} from "../utils/libby.js"
-import {kayinGyiBooks, kayinGyiBooksBarcode, kayinGyiTemp, homeDirectory  } from "../utils/directories.js"
+import {kayinGyiBooks, kayinGyiBooksBarcode, kayinGyiTemp, homeDirectory, kayinGyiCSVFile  } from "../utils/directories.js"
 import { mapBook } from "../utils/model.mapper.js"
 import {moveFile, deleteFile} from "../utils/libby.js"
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 export const addBook = async(req, res, next) => {
     try {
@@ -414,6 +420,43 @@ export const getLatestAccNo = async(req, res, next) => {
     }
 }
 
+const innerLatestAccNo = async(category) => {
+    try{
+
+        let bookFormat;
+        if(category == "myanmar"){
+            bookFormat = mmbook
+        }else if(category == "english"){
+            bookFormat = engbook
+        }
+
+        let accNo;
+        const deletedBook = await deletedbook.findOne({category})
+        if(deletedBook){
+            accNo = deletedBook.accNo;
+        }else{
+            const latestBook = await bookFormat.findOne().sort({_id: -1})
+            if(latestBook){
+                let number = latestBook.accNo.split("-")
+                number = Number(number[1])+1
+                let totalNumber = 5;
+                let finalNumber = String(number);
+                for(let i = finalNumber.length; i < totalNumber; i++){
+                    finalNumber = "0" + finalNumber;
+                }
+                
+                accNo = `CC-${finalNumber}`;
+            }else{
+                accNo = "CC-00001"
+            }   
+        }
+
+        return accNo;
+    }catch(error){
+        console.log("inner latest acc no error " + error)
+    }
+}
+
 export const searchBook = async(req, res, next) => {
     try{
 
@@ -482,6 +525,93 @@ export const getBookLoanHistory = async(req, res, next) =>{
     console.log("get book loan history error " + error)
     next(error)
   }
+}
+
+export const getBookDataCSV = async (req, res, next) => {
+    try{
+        if(!req.file){
+            return fError(res, "Need csv file", 400)
+        }
+
+        let {category} = req.body;
+
+        const bookFields = ["Accession-Number", "Book-Title", "Sub-Title", "Parallel-Title", "Initial", 
+            "Class-Num", "Call-Num", "SOR", "Author-One", "Author-Two", "Author-Three", 
+            "Other", "Translator", "Pagination", "Size", "Illustration-Type", "Series-Title", 
+            "Series-No", "Include-CD", "Subject-Headings", "Edition", "Editor", "Place", "Publisher", 
+            "Year", "Keywords", "Summary", "Notes", "Source", "Price", "Donor", "Catalog-Owner"
+        ];
+
+        const modelFields = ["accNo", "bookTitle", "subTitle", "parallelTitle", "initial",
+            "classNo", "callNo",  "sor", "authorOne", "authorTwo", "authorThree",
+            "other", "translator", "pagination", "size", "illustrationType", "seriesTitle",
+            "seriesNo", "includeCD", "subjectHeadings", "edition", "editor", "place", "publisher",
+            "year", "keywords", "summary", "notes", "source", "price", "donor", "catalogOwner"]
+
+        const requiredFields = ["accNo", "bookTitle", "classNo", "callNo", "sor", "isbn", "initial"]
+        
+
+        const dummyImagePath = path.join(__dirname, "blank_book.jpg");
+        let results = []
+        let promises = []
+
+        let accNumberIndex = 0;
+        let callNumberIndex = 0;
+        fs.createReadStream(req.file.path)
+        .pipe(csvParser({
+            mapHeaders: ({ header, index }) => {
+                for(let i = 0; i < bookFields.length; i++){
+                    if(header === bookFields[i]){
+                        return modelFields[i]
+                    }
+                }
+            }
+        }))
+        .on("data", async(data) => {
+            let promise = (async () => {
+                for(let field of requiredFields){
+                    if(!data[field]){
+                       if(field === "accNo"){
+                        let number = await innerLatestAccNo(category)
+                        data[field] = (number + accNumberIndex) 
+                        accNumberIndex += 1;
+                       }else if(field === "callNo"){
+                        data[field] = "Call Num N/A " + callNumberIndex
+                        callNumberIndex += 1;
+                       }
+                       else{
+                        data[field] = "N/A"
+                       }
+                    }
+                }
+                data.bookCover = dummyImagePath
+                results.push(data)
+            })();
+            promises.push(promise)
+            // for(let field of requiredFields){
+            //     if(!data[field]){
+            //        if(field === "accNo"){
+            //         data[field] = await innerLatestAccNo(category)
+            //        }else{
+            //         data[field] = "N/A"
+            //        }
+            //     }
+            // }
+            // data.bookCover = dummyImagePath
+
+        })
+        .on("end", async() => {
+            await Promise.all(promises); 
+            // console.log("these are results" + JSON.stringify(results))
+            await mmbook.insertMany(results, {"ordered": false})
+        })
+
+        fMsg(res, "Data imported successfully", results, 200)
+        
+    }catch(error){
+        console.log("get book data csv error " + error)
+        next(error)
+    }
 }
 
 export const numOfBooks = async(req, res, next) => {
