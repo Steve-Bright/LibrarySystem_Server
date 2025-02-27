@@ -82,7 +82,13 @@ const bookSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    subjectHeadings: {
+    subjectOne: {
+        type: String
+    },
+    subjectTwo: {
+        type: String
+    },
+    subjectThree: {
         type: String
     },
     edition: {
