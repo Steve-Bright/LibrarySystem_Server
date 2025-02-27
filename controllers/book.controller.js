@@ -1,12 +1,18 @@
 import mmbook from "../model/mmbook.model.js"
 import engbook from "../model/engbook.model.js"
 import Loan from "../model/loan.model.js"
+import csvParser from "csv-parser"
+import fs from "fs"
+import path from "path"
+import { fileURLToPath } from "url"
 import deletedbook from "../model/deletedbook.model.js"
 import {fMsg, fError, paginate, getWeeklyDates, getMonthlyDates} from "../utils/libby.js"
-import {kayinGyiBooks, kayinGyiBooksBarcode, kayinGyiTemp, homeDirectory  } from "../utils/directories.js"
+import {kayinGyiBooks, kayinGyiBooksBarcode, kayinGyiTemp, homeDirectory, kayinGyiCSVFile  } from "../utils/directories.js"
 import { mapBook } from "../utils/model.mapper.js"
 import {moveFile, deleteFile} from "../utils/libby.js"
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 export const addBook = async(req, res, next) => {
     try {
@@ -32,7 +38,9 @@ export const addBook = async(req, res, next) => {
             seriesTitle, 
             seriesNo, 
             includeCD, 
-            subjectHeadings, 
+            subjectOne, 
+            subjectTwo,
+            subjectThree,
             edition, 
             editor, 
             place, 
@@ -112,7 +120,9 @@ export const addBook = async(req, res, next) => {
             seriesTitle, 
             seriesNo, 
             includeCD, 
-            subjectHeadings, 
+            subjectOne, 
+            subjectTwo,
+            subjectThree, 
             edition, 
             editor, 
             place, 
@@ -165,7 +175,9 @@ export const editBook = async(req, res, next) => {
             seriesTitle, 
             seriesNo, 
             includeCD, 
-            subjectHeadings, 
+            subjectOne, 
+            subjectTwo,
+            subjectThree,
             edition, 
             editor, 
             place, 
@@ -242,7 +254,9 @@ export const editBook = async(req, res, next) => {
             seriesTitle, 
             seriesNo, 
             includeCD, 
-            subjectHeadings, 
+            subjectOne, 
+            subjectTwo,
+            subjectThree,
             edition, 
             editor, 
             place, 
@@ -359,8 +373,6 @@ export const deleteBook = async(req, res, next) => {
             return fError(res, "Book not found", 200)
         }
 
-        console.log("this function works till now")
-
         let accNo = deletedBook.accNo
         await (new deletedbook({category, accNo})).save()
         
@@ -393,17 +405,17 @@ export const getLatestAccNo = async(req, res, next) => {
         }else{
             const latestBook = await bookFormat.findOne().sort({_id: -1})
             if(latestBook){
-                let number = latestBook.accNo.split("-")
-                number = Number(number[1])+1
-                let totalNumber = 5;
+                // let number = latestBook.accNo.split("-")
+                let number = Number(latestBook.accNo)+1
+                let totalNumber = 6;
                 let finalNumber = String(number);
                 for(let i = finalNumber.length; i < totalNumber; i++){
                     finalNumber = "0" + finalNumber;
                 }
                 
-                accNo = `CC-${finalNumber}`;
+                accNo = finalNumber;
             }else{
-                accNo = "CC-00001"
+                accNo = "000001"
             }   
         }
 
@@ -411,6 +423,40 @@ export const getLatestAccNo = async(req, res, next) => {
     }catch(error){
         console.log("get latest acc no error " + error)
         next(error)
+    }
+}
+
+const innerLatestAccNo = async(category, numberIndex) => {
+    try{
+
+        let bookFormat;
+        if(category == "myanmar"){
+            bookFormat = mmbook
+        }else if(category == "english"){
+            bookFormat = engbook
+        }
+
+        let accNo;
+            const latestBook = await bookFormat.findOne().sort({_id: -1})
+            if(latestBook){
+                // let number = latestBook.accNo.split("-")
+                let number = Number(latestBook.accNo)+1 + numberIndex
+                let totalNumber = 6;
+                let finalNumber = String(number);
+                for(let i = finalNumber.length; i < totalNumber; i++){
+                    finalNumber = "0" + finalNumber;
+                }
+                
+                accNo = finalNumber;
+                console.log("latest book come on dnfadnfnasd;fj " + number)
+            }else{
+                accNo = "000001"
+            }   
+        
+
+        return {accNo, numberIndex};
+    }catch(error){
+        console.log("inner latest acc no error " + error)
     }
 }
 
@@ -482,6 +528,133 @@ export const getBookLoanHistory = async(req, res, next) =>{
     console.log("get book loan history error " + error)
     next(error)
   }
+}
+
+export const getBookDataCSV = async (req, res, next) => {
+    try{
+        if(!req.file){
+            return fError(res, "Need csv file", 400)
+        }
+
+        let {category} = req.body;
+        let bookFormat;
+
+        const bookFields = {
+            "Accession-Number": "accNo",
+            "Book-Title": "bookTitle",
+            "Sub-Title": "subTitle",
+            "Parallel-Title": "parallelTitle",
+            "Initial": "initial",
+            "Class-Num": "classNo",
+            "Call-Num": "callNo",
+            "SOR": "sor",
+            "Author-One": "authorOne",
+            "Author-Two": "authorTwo",
+            "Author-Three": "authorThree",
+            "Other": "other",
+            "Translator": "translator",
+            "Pagination": "pagination",
+            "Size": "size",
+            "Illustration-Type": "illustrationType",
+            "Series-Title": "seriesTitle",
+            "Series-No": "seriesNo",
+            "Include-CD": "includeCD",
+            "Subject-One": "subjectOne", 
+            "Subject-Two": "subjectTwo",
+            "Subject-Three": "subjectThree",
+            "Edition": "edition",
+            "Editor": "editor",
+            "Place": "place",
+            "Publisher": "publisher",
+            "Year": "year",
+            "Keywords": "keywords",
+            "Summary": "summary",
+            "Notes": "notes",
+            "Source": "source",
+            "Price": "price",
+            "Donor": "donor",
+            "Catalog-Owner": "catalogOwner"
+        };
+
+        if(category === "myanmar"){
+            bookFields["ISBN"] = "isbn";
+            bookFormat = mmbook
+        }else{
+            bookFormat = engbook;
+        }
+        
+        let bookKeys = Object.keys(bookFields)
+
+        const requiredFields = ["accNo", "bookTitle", "classNo", "callNo", "sor", "isbn", "initial"]
+        
+
+        const dummyImagePath = path.join(__dirname, "blank_book.jpg");
+        let results = []
+        let promises = []
+
+        let accNumberIndex = -1;
+        let callNumberIndex = 0;
+        fs.createReadStream(req.file.path)
+        .pipe(csvParser({
+            mapHeaders: ({ header, index }) => {
+                for(let i = 0; i < bookKeys.length; i++){
+                    if(header === bookKeys[i]){
+                        return bookFields[bookKeys[i]]
+                    }
+                }
+            },
+            delimiter: ',,,'
+        }))
+        .on("data", async(data) => {
+            let promise = (async () => {
+                for(let field of requiredFields){
+                    if(!data[field]){
+                       if(field === "accNo"){
+                        let number = await innerLatestAccNo(category, accNumberIndex)
+                        data[field] = number.accNo;
+                        console.log("number index " + number.numberIndex)
+                        // accNumberIndex = number.numberIndex
+
+                       }else if(field === "callNo"){
+                        let accessionNumber = data["accNo"] || "AccNo " + callNumberIndex
+                        let initial = data["initial"] || "Intial"
+                        let classNumber = data["classNo"] || "Class"
+                        data[field] = `${accessionNumber} ${initial} ${classNumber}`
+                        callNumberIndex += 1;
+                       }
+                       else{
+                        data[field] = "N/A"
+                       }
+                    }
+                }
+                data.bookCover = dummyImagePath
+                results.push(data)
+            })();
+            promises.push(promise)
+            // for(let field of requiredFields){
+            //     if(!data[field]){
+            //        if(field === "accNo"){
+            //         data[field] = await innerLatestAccNo(category)
+            //        }else{
+            //         data[field] = "N/A"
+            //        }
+            //     }
+            // }
+            // data.bookCover = dummyImagePath
+
+        })
+        .on("end", async() => {
+            await Promise.all(promises); 
+            // console.log("these are results" + JSON.stringify(results))
+            await bookFormat.insertMany(results, {"ordered": false})
+        })
+
+        fMsg(res, "Data imported successfully", results, 200)
+        
+    }catch(error){
+        console.log("get book data csv error " + error)
+        next(error)
+    }
 }
 
 export const numOfBooks = async(req, res, next) => {

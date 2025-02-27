@@ -210,7 +210,7 @@ export const BookSchema = {
         .required(),
 
       accNo: Joi.string()
-        .pattern(/^CC-\d{5}$/)
+        .pattern(/^\d{6}$/)
         .message({
           "string.pattern.base": "Incorrect Accession Number format CC-XXXXX"
         })
@@ -301,8 +301,16 @@ export const BookSchema = {
         .label("CD in the book")
         .optional(),
         
-      subjectHeadings: Joi.string()
-        .label("Subject Headings")
+      subjectOne: Joi.string()
+        .label("Subject One")
+        .optional(),
+
+      subjectTwo: Joi.string()
+        .label("Subject Two")
+        .optional(),
+
+      subjectThree: Joi.string()
+        .label("Subject Three")
         .optional(),
 
       edition: Joi.string()
@@ -368,7 +376,7 @@ export const BookSchema = {
         .required(),
 
       accNo: Joi.string()
-        .pattern(/^CC-\d{5}$/)
+        .pattern(/^\d{6}$/)
         .message({
           "string.pattern.base": "Incorrect Accession number format CC-XXXXX"
         })
@@ -460,8 +468,16 @@ export const BookSchema = {
         .label("CD in the book")
         .optional(),
 
-      subjectHeadings: Joi.string()
-        .label("Subject Headings")
+      subjectOne: Joi.string()
+      .label("Subject One")
+      .optional(),
+
+      subjectTwo: Joi.string()
+        .label("Subject Two")
+        .optional(),
+
+      subjectThree: Joi.string()
+        .label("Subject Three")
         .optional(),
 
       edition: Joi.string()
@@ -518,7 +534,7 @@ export const BookSchema = {
         .label("Editing the image")
         .optional()
     })
-      .or('bookTitle', 'subTitle', 'parallelTitle', 'initial', 'classNo', 'callNo', 'sor', 'isbn', 'authorOne', 'authorTwo', 'authorThree', 'other', 'translator', 'pagination', 'size', 'illustrationType', 'seriesTitle', 'seriesNo', 'includeCD', 'subjectHeadings', 'edition', 'editor', 'place', 'publisher', 'year', 'keywords', 'summary', 'notes', 'source', 'price', 'donor', 'catalogOwner', "editedPhoto")
+      .or('bookTitle', 'subTitle', 'parallelTitle', 'initial', 'classNo', 'callNo', 'sor', 'isbn', 'authorOne', 'authorTwo', 'authorThree', 'other', 'translator', 'pagination', 'size', 'illustrationType', 'seriesTitle', 'seriesNo', 'includeCD', 'subjectOne', 'subjectTwo', 'subjectThree', 'edition', 'editor', 'place', 'publisher', 'year', 'keywords', 'summary', 'notes', 'source', 'price', 'donor', 'catalogOwner', "editedPhoto")
       .messages({
         "object.missing": "Please specify at least one field to update",
       }),
