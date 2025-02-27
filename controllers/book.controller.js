@@ -462,14 +462,13 @@ const innerLatestAccNo = async(category, numberIndex) => {
 
 export const searchBook = async(req, res, next) => {
     try{
-
-        const {category, accNo, bookTitle, sor, publisher, classNo, isbn} = req.body;
+        const {category, accNo, bookTitle, sor, publisher, subject, isbn} = req.body;
 
         if(!category){
             return fError(res, "Please enter  the required field")
         }
 
-        if(!accNo && !bookTitle && !sor && !publisher && !classNo && !isbn){
+        if(!accNo && !bookTitle && !sor && !publisher && !subject && !isbn){
             return fError(res, "Please enter the specifc fields ")
         }
 
@@ -490,10 +489,14 @@ export const searchBook = async(req, res, next) => {
         if(publisher){
             searchFields["publisher"] = { $regex: publisher, $options: 'i' };
         }
-        if(classNo){
-            searchFields["classNo"] = { $regex: classNo, $options: 'i' };
+        if(subject){
+            searchFields["$or"] = [
+                { subjectOne: { $regex: subject, $options: 'i' } },
+                { subjectTwo: { $regex: subject, $options: 'i' } },
+                { subjectThree: { $regex: subject, $options: 'i' } }
+            ];
         }
-
+   
         let bookFormat;
         if(category == "myanmar"){
             bookFormat = mmbook
