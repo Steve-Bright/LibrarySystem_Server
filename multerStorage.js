@@ -19,8 +19,14 @@ const storage = multer.diskStorage({
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now();
-        const accessionNum = req.body.accNo; // Access req.body
-        const generatedName  = accessionNum + '-' + uniqueSuffix;
+        let prefixName;
+        if(req.body.accNo){
+            prefixName = req.body.accNo;
+        }else if(req.body.memberId){
+            prefixName = req.body.memberid;
+        }
+        // const accessionNum = req.body.accNo; // Access req.body
+        const generatedName  = prefixName + '-' + uniqueSuffix;
         // fileName.push(generatedName)
         if(!req.fileNames) req.fileNames = []
         req.fileNames.push(generatedName)

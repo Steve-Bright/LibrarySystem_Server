@@ -290,7 +290,8 @@ export const getLatestMemberId = async(req, res, next) => {
                 return fError(res, "Wrong memberType value")
         }
         let memberId;
-        const latestMember = await member.findOne({memberType}).sort({_id: -1})
+        const latestMember = await member.findOne({memberType}).sort({memberId: -1})
+        console.log("latest member " + JSON.stringify(latestMember))
         if(latestMember){
             let number = latestMember.memberId.split("-")
             number = Number(number[1])+1
