@@ -2,7 +2,7 @@ import member from "../model/member.model.js"
 import banMemberModel from "../model/banmember.model.js"
 import bannedMemberModel from "../model/banmember.model.js"
 import {fMsg, fError, todayDate, nextYear, paginate, getAnotherMonth, getWeeklyDates, getMonthlyDates} from "../utils/libby.js"
-import { kayinGyiMembers, kayinGyiMembersBarcode, kayinGyiTemp } from "../utils/directories.js"
+import { kayinGyiMembers, kayinGyiMembersBarcode, kayinGyiTemp, homeDirectory } from "../utils/directories.js"
 import { mapMember } from "../utils/model.mapper.js"
 import Loan from "../model/loan.model.js"
 
@@ -158,13 +158,15 @@ export const editMember = async(req, res, next) => {
             return fError(res, "There is already same phone number")
         }
 
-        let fileName;
+
         let memberPhoto
         let actualMemberPhoto
+        let oldMemberPhoto;
         if(editedPhoto && req.file){
-            fileName = memberIdFound + "-" + Date.now() + ".png"
+            const fileName = memberIdFound + "-" + Date.now() + ".png"
             memberPhoto = "/KayinGyi/members/" + fileName
             actualMemberPhoto = kayinGyiMembers + fileName
+            oldMemberPhoto = homeDirectory + memberFound.photo
         }
 
         const updatedMemberData = mapMember({
@@ -187,7 +189,8 @@ export const editMember = async(req, res, next) => {
 
         await updatedMember.save();
         fMsg(res, "Member is edited successfully", updatedMember, 200)
-        return [actualMemberPhoto]
+        console.log("old photo " + oldMemberPhoto)
+        return [oldMemberPhoto, actualMemberPhoto]
 
     }catch(error){
         console.log("edit member error " + error)
@@ -257,7 +260,10 @@ export const deleteMember = async(req, res, next) => {
             return fError(res, "Member to be deleted is not found", 200)
         }
 
+        const actualMemberBarcode = homeDirectory + deleteMember.barcode;
+        const actualMemberPhoto = homeDirectory + deletedMember.photo
         fMsg(res, "Member deleted successfully", deletedMember, 200)
+        return [actualMemberBarcode, actualMemberPhoto]
     }catch(error){
         console.log("delete member error " + error)
         next(error)

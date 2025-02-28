@@ -16,9 +16,9 @@ router.post("/addBook", validateToken(),  upload.fields([{name: "bookCover"}, {n
 router.post("/editBook", validateToken(), isManager(), upload.single("bookCover"), validateBody(BookSchema.edit),
             (req, res, next) => editBook(req, res, next) .then((fileDirectory) => editImage(fileDirectory, req.fileNames))
             )
-router.patch("/editBook", validateToken(), isManager(), upload.single("bookCover"), validateBody(BookSchema.edit),
-            (req, res, next) => editBook(req, res, next) .then((fileDirectory) => editImage(fileDirectory, req.fileNames))
-            )
+// router.patch("/editBook", validateToken(), isManager(), upload.single("bookCover"), validateBody(BookSchema.edit),
+//             (req, res, next) => editBook(req, res, next) .then((fileDirectory) => editImage(fileDirectory, req.fileNames))
+//             )
 // router.post("/editBook", validateToken(),  editUpload.single("bookCover"), 
 //             (req, res, next) => console.log("this is the request file " + req.file)
 //             )

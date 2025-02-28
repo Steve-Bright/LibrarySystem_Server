@@ -223,7 +223,6 @@ export const editBook = async(req, res, next) => {
         let bookCover;
         let actualBookCover;
         let oldBookCover
-        console.log("this is req files " + JSON.stringify(req.file))
         if(editedPhoto && req.file){
             const fileName = bookAccNo + "-" + Date.now() + ".png"
             bookCover = "/KayinGyi/books/" + fileName
@@ -274,8 +273,6 @@ export const editBook = async(req, res, next) => {
         const updatedBook = await bookFormat.findByIdAndUpdate(bookId, bookData, {new: true})
 
         fMsg(res, "Book updated successfully", updatedBook, 200)
-        console.log("This is old book cover " + oldBookCover)
-        console.log("This is actual book cover " + actualBookCover)
         return [oldBookCover, actualBookCover]
     }catch(error){
         console.log("edit book error: " + error)
@@ -606,7 +603,7 @@ export const getBookDataCSV = async (req, res, next) => {
                     }
                 }
             },
-            delimiter: ',,,'
+            delimiter: ','
         }))
         .on("data", async(data) => {
             let promise = (async () => {
