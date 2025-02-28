@@ -400,7 +400,7 @@ export const getLatestAccNo = async(req, res, next) => {
         if(deletedBook){
             accNo = deletedBook.accNo;
         }else{
-            const latestBook = await bookFormat.findOne().sort({_id: -1})
+            const latestBook = await bookFormat.findOne().sort({accNo: -1})
             if(latestBook){
                 // let number = latestBook.accNo.split("-")
                 let number = Number(latestBook.accNo)+1
