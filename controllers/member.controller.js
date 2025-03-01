@@ -356,7 +356,7 @@ export const extendMembership = async (req, res, next) => {
     try{
         const memberDatabaseId = req.params.memberDatabaseId;
         let today = todayDate()
-        let expiryDate = nextYear();
+        let expiryDate = getAnotherMonth(5);
         if(!memberDatabaseId){
             return fError(res, "Member id not found")
         }

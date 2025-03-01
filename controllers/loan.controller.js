@@ -57,6 +57,7 @@ export const addLoan = async(req, res, next) => {
                 break;
             case "staff": 
             case "teacher": 
+            case "public":
                 duration =  "2 week"
                 dueDate = todayDate(14)
                 break;
@@ -123,6 +124,7 @@ export const returnLoan = async(req, res, next) => {
 
 export const checkLoan = async(req, res, next) => {
     try{
+        console.log('check loan function is triggered')
         const overdueLoans = await loanModel.find({dueDate: {$lt: todayDate()}, loanStatus: true})
         for(const eachOverdue of overdueLoans){
             if(eachOverdue.overdue == false){

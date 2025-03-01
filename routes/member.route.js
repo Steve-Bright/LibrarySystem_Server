@@ -21,7 +21,7 @@ router.post("/banMember", validateToken(), isManager(), toggleBanMember)
 router.delete("/deleteMember", validateToken(), isManager(), (req, res, next) =>  deleteMember(req, res, next).then((fileNames) => deleteImage(fileNames)))
 router.post("/extendMembership/:memberDatabaseId", validateToken(), isManager(), extendMembership)
 router.get("/getLatestMemberId/:memberType", validateToken(), getLatestMemberId);
-router.get("/checkBannedMembers", validateToken(), checkBannedMembers)
+router.get("/checkBannedMembers", checkBannedMembers)
 router.post("/searchMember", validateToken(), searchMember)
 router.get("/totalNum/:duration", validateToken(), numOfMembers)
 router.get("/checkBanUntil/:id", validateToken(), checkBanUntil)

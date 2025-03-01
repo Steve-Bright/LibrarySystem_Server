@@ -402,7 +402,6 @@ export const getLatestAccNo = async(req, res, next) => {
         }else{
             const latestBook = await bookFormat.findOne().sort({accNo: -1})
             if(latestBook){
-                // let number = latestBook.accNo.split("-")
                 let number = Number(latestBook.accNo)+1
                 let totalNumber = 6;
                 let finalNumber = String(number);
