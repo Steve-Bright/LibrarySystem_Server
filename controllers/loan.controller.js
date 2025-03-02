@@ -7,8 +7,8 @@ import {fMsg, fError, paginate, todayDate, getWeeklyDates, getMonthlyDates} from
 
 export const addLoan = async(req, res, next) => {
     try{
-        const { category, bookId, memberId } = req.body;
-        if(!category || !bookId || !memberId){
+        const { category, bookDatabaseId, memberDatabaseId } = req.body;
+        if(!category || !bookDatabaseId || !memberDatabaseId){
             return fError(res, "Please enter the category, book and member Ids")
         }
 
@@ -24,27 +24,14 @@ export const addLoan = async(req, res, next) => {
             return fError(res, "Wrong category input", 400)
         }
 
-        const loanBook = await bookFormat.findById(bookId)
+        const loanBook = await bookFormat.findById(bookDatabaseId)
         if(!loanBook){
             return fError(res, "Book is not found")
         }
 
-        const memberFound = await member.findById(memberId)
+        const memberFound = await member.findById(memberDatabaseId)
         if(memberFound.block == true){
             return fError(res, "Member is banned, can't lend ")
-        }
-
-        if(memberFound.loanBooks == 3){
-            return fError(res, "You cannot loan more than 3 books")
-        }else{
-            if(loanBook.loanStatus == true){
-                return fError(res, "The book is already loaned")
-            }else{
-                loanBook.loanStatus = true
-                memberFound.loanBooks ++;   
-                await memberFound.save();
-                await loanBook.save()
-            }
         }
         let memberType = memberFound.memberType
 
@@ -66,16 +53,38 @@ export const addLoan = async(req, res, next) => {
         }
 
         let loanDate = todayDate()
-        let loanStatus = true;
+
+        if(memberFound.loanBooks == 3){
+            return fError(res, "You cannot loan more than 3 books")
+        }else{
+            if(loanBook.loanStatus == true){
+                return fError(res, "The book is already loaned")
+            }else{
+                loanBook.loanStatus = true
+                memberFound.loanBooks ++;   
+                await memberFound.save();
+                await loanBook.save()
+            }
+        }
         
         const bookLoan = await loanModel.create({
-            memberId,
-            bookId,
+            memberDatabaseId,
+            bookDatabaseId,
+            category: loanBook.category,
+            accNo: loanBook.accNo,
+            callNo: loanBook.callNo,
+            bookTitle: loanBook.bookTitle,
+            bookCover: loanBook.bookCover,
+            memberId: memberFound.memberId,
+            name: memberFound.name,
+            memberType: memberFound.memberType,
+            phone: memberFound.phone,
+            photo: memberFound.photo,
             bookModel,
             loanDate,
             dueDate,
             duration,
-            loanStatus
+            loanStatus: true
         })
 
         // const overdueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
@@ -98,7 +107,7 @@ export const returnLoan = async(req, res, next) => {
         }
 
         const loanBook =await loanModel.findById(loanId)
-        if(!loanId){
+        if(!loanBook){
             return fError(res, "Loan not found", 404)
         }
 
@@ -109,9 +118,17 @@ export const returnLoan = async(req, res, next) => {
             bookFormat = mmbook
         }
         
-        await bookFormat.findByIdAndUpdate(loanBook.bookId, {loanStatus: false})
+        if(loanBook.bookDatabaseId){
+            await bookFormat.findByIdAndUpdate(loanBook.bookDatabaseId, {loanStatus: false})
+        }
 
+        if(loanBook.memberDatabaseId){
+            await member.findByIdAndUpdate(loanBook.memberDatabaseId, { $inc: {loanBooks: -1}})
+        }
+
+        loanBook.returnDate = todayDate()
         loanBook.loanStatus = false;
+        loanBook.overdue = false;
         await loanBook.save();
 
         fMsg(res, "Book returned successfully", loanBook, 200)
@@ -124,7 +141,6 @@ export const returnLoan = async(req, res, next) => {
 
 export const checkLoan = async(req, res, next) => {
     try{
-        console.log('check loan function is triggered')
         const overdueLoans = await loanModel.find({dueDate: {$lt: todayDate()}, loanStatus: true})
         for(const eachOverdue of overdueLoans){
             if(eachOverdue.overdue == false){
@@ -143,7 +159,7 @@ export const extendLoan = async(req, res, next) => {
     try{
         const loanId = req.params.loanId
 
-        let loanFound = await loanModel.findById(loanId).populate("memberId", "memberType")
+        let loanFound = await loanModel.findById(loanId)
         if(!loanFound){
             return fError(res, "Loan is not found", 404)
         }
@@ -152,7 +168,7 @@ export const extendLoan = async(req, res, next) => {
             return fError(res, "You are not allowed to extend before due date", 400)
         }
 
-        let memberType = loanFound.memberId.memberType;
+        let memberType = loanFound.memberType;
         let loanDuration = loanFound.duration.split(" ")
         let duration;
         let dueDate;
@@ -162,7 +178,8 @@ export const extendLoan = async(req, res, next) => {
                 dueDate = todayDate(7)
                 break;
             case "staff": 
-            case "teacher": 
+            case "teacher":
+            case "public" :
                 duration = `${Number(loanDuration[0]) + 2} weeks`;
                 dueDate = todayDate(14)
                 break;
@@ -170,6 +187,11 @@ export const extendLoan = async(req, res, next) => {
             return fError(res, "Something went wrong with memberType")
         }
 
+        if(loanFound.overdue){
+            loanFound.overdue = false;
+            await loanFound.save();
+        }
+        
         const extendedLoan = await loanModel.findByIdAndUpdate(loanId, {
             duration,
             dueDate
@@ -211,60 +233,61 @@ export const searchLoan = async(req, res, next) => {
             return fError(res, "Please specify the fields")
         }
 
-        let memberFields = {};
-        let bookFields = {}
+        // let memberFields = {};
+        // let bookFields = {}
 
-        if(accNo){
-            bookFields["accNo"] = { $regex: accNo, $options: "i" }
-        }
 
-        if(memberId){
-            memberFields["memberId"] = { $regex: memberId, $options: "i" }
-        }
+        // if(accNo){
+        //     bookFields["accNo"] = { $regex: accNo, $options: "i" }
+        // }
 
-        if(bookTitle){
-            bookFields["bookTitle"] = { $regex: bookTitle, $options: "i" }
-        }
+        // if(memberId){
+        //     memberFields["memberId"] = { $regex: memberId, $options: "i" }
+        // }
 
-        if(name){
-            memberFields["name"] = { $regex: name, $options: "i" }
-        }
+        // if(bookTitle){
+        //     bookFields["bookTitle"] = { $regex: bookTitle, $options: "i" }
+        // }
 
-        let combineBooks = [];
-        if(bookFields != {}){
-            let engBooks = await engbook.find(bookFields).exec()
-            let mmBooks = await mmbook.find(bookFields).exec()
+        // if(name){
+        //     memberFields["name"] = { $regex: name, $options: "i" }
+        // }
+
+        // let combineBooks = [];
+        // if(bookFields != {}){
+        //     let engBooks = await engbook.find(bookFields).exec()
+        //     let mmBooks = await mmbook.find(bookFields).exec()
 
             
-            if(engBooks.length > 0){
-                for(let eachEngBook of engBooks){
-                    combineBooks.push(eachEngBook._id)
-                }
-            }
+        //     if(engBooks.length > 0){
+        //         for(let eachEngBook of engBooks){
+        //             combineBooks.push(eachEngBook._id)
+        //         }
+        //     }
 
-            if(mmBooks.length > 0){
-                for(let eachMmBook of mmBooks){
-                    combineBooks.push(eachMmBook._id)
-                }
-            }
+        //     if(mmBooks.length > 0){
+        //         for(let eachMmBook of mmBooks){
+        //             combineBooks.push(eachMmBook._id)
+        //         }
+        //     }
 
-            if(engBooks.length == 0 && mmBooks.length == 0){
-                return fError(res, "Loan not found with such book name ", 400)
-            }
+        //     if(engBooks.length == 0 && mmBooks.length == 0){
+        //         return fError(res, "Loan not found with such book name ", 400)
+        //     }
 
-        }
+        // }
 
-        let memberFound;
-        let memberIds = []
-        if(memberFields != {}){
-            memberFound = await member.find(memberFields).exec()
-            if(!memberFound || memberFound.length === 0){
-                return fError(res, "Loan not found with such name", 400)
-            }
-            for(let eachMember of memberFound){
-                memberIds.push(eachMember)
-            }
-        }
+        // let memberFound;
+        // let memberIds = []
+        // if(memberFields != {}){
+        //     memberFound = await member.find(memberFields).exec()
+        //     if(!memberFound || memberFound.length === 0){
+        //         return fError(res, "Loan not found with such name", 400)
+        //     }
+        //     for(let eachMember of memberFound){
+        //         memberIds.push(eachMember)
+        //     }
+        // }
         let loanQuery = {};
 
         switch(loanType){
@@ -277,17 +300,33 @@ export const searchLoan = async(req, res, next) => {
             default: loanQuery = {}
             break;
         }
-        if (combineBooks.length > 0) {
-            loanQuery["bookId"] = { $in: combineBooks };
-        }
-        if (memberIds.length > 0) {
-            loanQuery["memberId"] = { $in: memberIds };
+
+        if(accNo){
+            loanQuery["accNo"] = { $regex: accNo, $options: "i" }
         }
 
+        if(memberId){
+            loanQuery["memberId"] = { $regex: memberId, $options: "i" }
+        }
+
+        if(bookTitle){
+            loanQuery["bookTitle"] = {$regex: bookTitle, $options: "i"}
+        }
+
+        if(name){
+            loanQuery["name"] = {$regex: name, $options: "i"}
+        }
+        // if (combineBooks.length > 0) {
+        //     loanQuery["bookId"] = { $in: combineBooks };
+        // }
+        // if (memberIds.length > 0) {
+        //     loanQuery["memberId"] = { $in: memberIds };
+        // }
+
         const loans = await loanModel.find(loanQuery)
-        .populate("memberId", "name memberType phone memberId")
-        .populate("bookId", "category callNo bookTitle")
-        .exec();
+        // .populate("memberId", "name memberType phone memberId")
+        // .populate("bookId", "category callNo bookTitle")
+        // .exec();
 
         fMsg(res, "This is the loan you searched", loans, 200)
         
@@ -314,17 +353,17 @@ export const getAllLoans = async(req, res, next) => {
             break;
         }
 
-        let populate = {
-            memberId: "name memberType phone memberId",
-            bookId: "category callNo bookTitle"
-        }
+        // let populate = {
+        //     memberId: "name memberType phone memberId",
+        //     bookId: "category callNo bookTitle"
+        // }
 
-        const populateString = Object.entries(populate).map(
-            ([path, select]) => ({
-                path,
-                select,
-            })
-        );
+        // const populateString = Object.entries(populate).map(
+        //     ([path, select]) => ({
+        //         path,
+        //         select,
+        //     })
+        // );
 
 
         const loans = await paginate(
@@ -332,8 +371,8 @@ export const getAllLoans = async(req, res, next) => {
             filter, 
             page,
             10,
-            sortField,
-            populateString
+            sortField
+            // populateString
         );
         fMsg(res, "All Loans", loans, 200)
     }catch(error){
@@ -395,7 +434,9 @@ export const numOfLoans = async(req, res, next) => {
                 break;
         }
         let totalLoans = await loanModel.countDocuments(allLoans)
-        let toReturns = await loanModel.countDocuments(adjustDate)
+        let returnFields = {...adjustDate}
+        returnFields["loanStatus"] = true;
+        let toReturns = await loanModel.countDocuments(returnFields)
 
         let overDueField = {...adjustDate};
         overDueField["overdue"] = true;
@@ -418,8 +459,6 @@ export const getLoanDetail = async(req, res, next) => {
 
         const loanDetail = await loanModel
                                 .findById(loanId)
-                                .populate("memberId", "name photo memberId memberType phone block")
-                                .populate("bookId", "bookCover bookTitle callNo category")
         if(!loanDetail){
             return fError(res, "Loan not found", 404)
         }
@@ -443,38 +482,38 @@ export const getTodayDeadlineLoan = async(req, res, next) => {
 
 export const getLoanHistory = async(req, res, next) => {
     try{
-        const {memberId, bookId, page} = req.query
+        const {memberDatabaseId, bookDatabaseId, page} = req.query
         
         let filter = {}
-        if(!memberId && !bookId){
+        if(!memberDatabaseId && !bookDatabaseId){
             return fError(res, "Need at least one value to check history")
         }
 
-        if(memberId){
-            filter["memberId"] = memberId
-        }else if(bookId){
-            filter["bookId"] = bookId
+        if(memberDatabaseId){
+            filter["memberDatabaseId"] = memberDatabaseId
+        }else if(bookDatabaseId){
+            filter["bookDatabaseId"] = bookDatabaseId
         }
 
-        let populate = {
-            memberId: "name memberType phone memberId",
-            bookId: "category callNo bookTitle"
-        }
+        // let populate = {
+        //     memberId: "name memberType phone memberId",
+        //     bookId: "category callNo bookTitle"
+        // }
 
-        const populateString = Object.entries(populate).map(
-            ([path, select]) => ({
-                path,
-                select,
-            })
-        );
+        // const populateString = Object.entries(populate).map(
+        //     ([path, select]) => ({
+        //         path,
+        //         select,
+        //     })
+        // );
 
         const loanHistory = await paginate(
             loanModel,
             filter,
             page,
             10,
-            "dueDate",
-            populateString
+            "dueDate"
+            // populateString
         )
 
         fMsg(res, "Loan History " , loanHistory, 200)

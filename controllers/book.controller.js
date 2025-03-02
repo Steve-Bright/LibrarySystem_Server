@@ -518,8 +518,6 @@ export const getBookLoanHistory = async(req, res, next) =>{
   try{
     const bookId = req.params.bookId;
     const loanHistories = await Loan.find({bookId})
-            .populate("bookId", "bookTitle category")
-            .populate("memberId", "memberId name")
 
     fMsg(res, "Loan History", loanHistories, 200)
 

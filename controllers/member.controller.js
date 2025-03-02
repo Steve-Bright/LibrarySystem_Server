@@ -136,10 +136,15 @@ export const editMember = async(req, res, next) => {
             return fError(res, "There is already duplicate member id ")
         }
 
-        if(nrc == ""){
-            memberFound.nrc = undefined;
-            await memberFound.save()
-        }else if(nrc && nrc != ''){
+        if(memberType === "staff" || memberType === "teacher" || memberType === "public"){
+            if((memberFound.memberType === "student" && !nrc)){
+                if(!memberFound.nrc){
+                    return fError(res, "Need nrc number for changing membertype from student or other")
+                }
+            }
+        }
+
+        if(nrc && nrc != ''){
             const sameNrc = await member.findOne({nrc})
             if(sameNrc){
                 return fError(res, "There is already duplicate nrc")
@@ -189,7 +194,6 @@ export const editMember = async(req, res, next) => {
 
         await updatedMember.save();
         fMsg(res, "Member is edited successfully", updatedMember, 200)
-        console.log("old photo " + oldMemberPhoto)
         return [oldMemberPhoto, actualMemberPhoto]
 
     }catch(error){
@@ -444,8 +448,6 @@ export const getMemberLoanHistory = async(req, res, next) => {
     try{
         const memberId = req.params.memberId;
         const loanHistories = await Loan.find({memberId})
-                .populate("bookId", "bookTitle category")
-                .populate("memberId", "memberId name")
         fMsg(res, "Loan History", loanHistories, 200)        
     }catch(error){
         console.log('get member loan history error ' + error)
@@ -482,8 +484,6 @@ export const numOfMembers = async(req, res, next) => {
         let publicField = {...adjustDate};
         publicField["memberType"] = "public"
 
-
-        console.log(JSON.stringify(studentField))
 
         totalMembers["total"] = await member.countDocuments(adjustDate)
         totalMembers["teachers"] = await member.countDocuments(teacherField)

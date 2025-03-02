@@ -177,7 +177,7 @@ export const MemberSchema = {
             .message({
               "string.pattern.base": "Incorrect NRC Format"
             })
-            .required(),
+            .optional(),
 
             otherwise: Joi
             .string()
