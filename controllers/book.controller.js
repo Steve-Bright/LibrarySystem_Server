@@ -10,6 +10,7 @@ import {fMsg, fError, paginate, getWeeklyDates, getMonthlyDates} from "../utils/
 import {kayinGyiBooks, kayinGyiBooksBarcode, kayinGyiTemp, homeDirectory, kayinGyiCSVFile  } from "../utils/directories.js"
 import { mapBook } from "../utils/model.mapper.js"
 import {moveFile, deleteFile} from "../utils/libby.js"
+import loanModel from "../model/loan.model.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -679,6 +680,44 @@ export const numOfBooks = async(req, res, next) => {
 
     }catch(error){
         console.log("error number of books " + error)
+        next(error)
+    }
+}
+
+export const getLatestLoan = async(req, res, next) => {
+    try{
+        const {bookId, category} = req.query;
+
+        if(!bookId || !category){
+            return fError(res, "Need at least one field to get lateset loan")
+        }
+
+        let bookFormat;
+        if(category == "myanmar"){
+            bookFormat = mmbook
+        }else{
+            bookFormat = engbook
+        }
+
+        let bookFound = await bookFormat.findById(bookId)
+        if(!bookFound){
+            return fError(res, "Book is not found")
+        }
+
+        if(!bookFound.loanStatus){
+            return fError(res, "Book is not being loaned at the moment", 400)
+        }
+
+        let loanFound = await loanModel.findOne({bookDatabaseId: bookId, loanStatus: true})
+        .select("_id loanStatus name phone dueDate overdue")
+        if(!loanFound){
+            return fError(res, "Something went wrong")
+        }
+
+        fMsg(res, "Latest Loan found" , loanFound, )
+
+    }catch(error){
+        console.log('gettng latest loan error ' + error)
         next(error)
     }
 }
