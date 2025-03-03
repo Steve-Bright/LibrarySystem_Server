@@ -87,6 +87,7 @@ export const addLoan = async(req, res, next) => {
             loanStatus: true
         })
 
+        await bookFormat.findByIdAndUpdate(bookDatabaseId, {latestLoanId: bookLoan._id})
         // const overdueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
         
 

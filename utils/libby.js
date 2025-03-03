@@ -65,18 +65,23 @@ export const paginate = async (model, filter, page = 1, limit = 10, sortField = 
                 dueDate: 1
             });
         } else if (sortField) {
-            query = query.sort({ [sortField]: -1 }); // Sort by the provided field (descending)
+            query = query.sort({ [sortField]: -1 }); 
         }
 
-        // Apply populate if provided
         if (populate.length > 0) {
             populate.forEach(pop => {
                 query = query.populate(pop);
+                console.log('query ' + JSON.stringify(pop))
             });
         }
 
+        // Debug Query Before Execution
+console.log("Final Query Before Execution:", query.getFilter());
+console.log("Final Query Populate:", query.getPopulatedPaths());
+
         // Execute the query and get the items
-        const items = await query;
+        console.log("final query " + query)
+        const items = await query.exec();
 
         return {
             items,

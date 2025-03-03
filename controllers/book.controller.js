@@ -341,8 +341,18 @@ export const getAllBooks = async(req, res, next) => {
             return fError(res, "Wrong category input", 400)
         }
 
+        let populate = {
+            latestLoanId: "loanStatus overdue dueDate"
+        }
+
+        const populateString = Object.entries(populate).map(
+            ([path, select]) => ({
+                path,
+                select,
+            })
+        );
         
-        const books = await paginate(bookFormat, null, page, 10,"createdAt")
+        const books = await paginate(bookFormat, null, page, 10,"accNo", populateString)
         fMsg(res, "Books fetched successfully", books, 200)
     }catch(error){
         console.log("get all books error " + error)
