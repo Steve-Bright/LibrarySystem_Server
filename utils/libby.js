@@ -71,16 +71,8 @@ export const paginate = async (model, filter, page = 1, limit = 10, sortField = 
         if (populate.length > 0) {
             populate.forEach(pop => {
                 query = query.populate(pop);
-                console.log('query ' + JSON.stringify(pop))
             });
         }
-
-        // Debug Query Before Execution
-console.log("Final Query Before Execution:", query.getFilter());
-console.log("Final Query Populate:", query.getPopulatedPaths());
-
-        // Execute the query and get the items
-        console.log("final query " + query)
         const items = await query.exec();
 
         return {

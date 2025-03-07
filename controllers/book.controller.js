@@ -2,6 +2,8 @@ import mmbook from "../model/mmbook.model.js"
 import engbook from "../model/engbook.model.js"
 import Loan from "../model/loan.model.js"
 import csvParser from "csv-parser"
+import JsBarcode from "jsbarcode"
+import { createCanvas, createImageData } from "canvas"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
@@ -596,7 +598,6 @@ export const getBookDataCSV = async (req, res, next) => {
         const requiredFields = ["accNo", "bookTitle", "classNo", "callNo", "sor", "isbn", "initial"]
         
 
-        const dummyImagePath = path.join(__dirname, "blank_book.jpg");
         let results = []
         let promises = []
 
@@ -618,11 +619,9 @@ export const getBookDataCSV = async (req, res, next) => {
                 for(let field of requiredFields){
                     if(!data[field]){
                        if(field === "accNo"){
+                        let canvas = createCanvas();
                         let number = await innerLatestAccNo(category, accNumberIndex)
                         data[field] = number.accNo;
-                        console.log("number index " + number.numberIndex)
-                        // accNumberIndex = number.numberIndex
-
                        }else if(field === "callNo"){
                         let accessionNumber = data["accNo"] || "AccNo " + callNumberIndex
                         let initial = data["initial"] || "Intial"
@@ -631,33 +630,34 @@ export const getBookDataCSV = async (req, res, next) => {
                         callNumberIndex += 1;
                        }
                        else{
-                        data[field] = "N/A"
+                        data[field] = "-"
                        }
                     }
                 }
-                data.bookCover = dummyImagePath
+                data.bookCover = "rcs_no_image"
+                let canvas = createCanvas();
+                let storedData = `${ category +","+ data.accNo }`;
+
+                let barcodeName = data.accNo + "-barcode-" + Date.now() + ".png"
+                let actualBookBarcode = kayinGyiBooksBarcode + barcodeName
+                let barcodePath = "/KayinGyi/booksBarcodes/" + barcodeName
+                let image;
+                JsBarcode(canvas, storedData, { displayValue: false });
+                
+                image = canvas.toBuffer("image/png");
+                
+                fs.writeFileSync(actualBookBarcode, image);
+                data["barcode"] = barcodePath
                 results.push(data)
             })();
             promises.push(promise)
-            // for(let field of requiredFields){
-            //     if(!data[field]){
-            //        if(field === "accNo"){
-            //         data[field] = await innerLatestAccNo(category)
-            //        }else{
-            //         data[field] = "N/A"
-            //        }
-            //     }
-            // }
-            // data.bookCover = dummyImagePath
 
         })
         .on("end", async() => {
             await Promise.all(promises); 
-            // console.log("these are results" + JSON.stringify(results))
             await bookFormat.insertMany(results, {"ordered": false})
+            fMsg(res, "Data imported successfully", 200)
         })
-
-        fMsg(res, "Data imported successfully", results, 200)
         
     }catch(error){
         console.log("get book data csv error " + error)
@@ -772,4 +772,27 @@ export function editImage(fileNames, editedFile){
     }
     
 
+}
+
+export const  generateBarcodeTest = async(req, res, next) => {
+    try{
+        const {category, accNo} = req.body;
+        const canvas = createCanvas();
+        let storedData = `${ category +","+ accNo }`;
+
+        const barcodeName = accNo + "-barcode-" + Date.now() + ".png"
+        const actualBookBarcode = kayinGyiBooksBarcode + barcodeName
+        let image;
+        JsBarcode(canvas, storedData, { displayValue: false });
+
+        image = canvas.toBuffer("image/png");
+
+        fs.writeFileSync(actualBookBarcode, image);
+        
+        fMsg(res, "You might have generated barcode image " , 200)
+        
+    }catch(error){
+        console.log('generate bar code error ' + error)
+        next(error)
+    }
 }

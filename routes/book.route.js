@@ -1,5 +1,5 @@
 import express from "express";
-import { addBook, deleteBook, editBook, getAllBooks, getBook, moveImage, getLatestAccNo, searchBook, deleteImage, editImage, getBookLoanHistory, numOfBooks, getBookDataCSV, getLatestLoan } from "../controllers/book.controller.js"
+import { addBook, deleteBook, editBook, getAllBooks, getBook, moveImage, getLatestAccNo, searchBook, deleteImage, editImage, getBookLoanHistory, numOfBooks, getBookDataCSV, getLatestLoan, generateBarcodeTest } from "../controllers/book.controller.js"
 import {  validateToken, isManager, validateBody } from "../utils/validator.js"
 import { upload, csvUpload } from "../multerStorage.js"
 import { BookSchema } from "../utils/data.entry.js";
@@ -31,5 +31,6 @@ router.post("/searchBook", validateToken(), searchBook)
 router.get("/totalNum/:duration", validateToken(), numOfBooks);
 router.get("/latestLoan", validateToken(), getLatestLoan)
 router.post("/importData", validateToken(), csvUpload.single("csvFile"), getBookDataCSV)
+router.post("/testBarcode", validateToken(), generateBarcodeTest)
 
 export default router;
