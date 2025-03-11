@@ -9,7 +9,7 @@ import path from "path"
 import { fileURLToPath } from "url"
 import deletedbook from "../model/deletedbook.model.js"
 import {fMsg, fError, paginate, getWeeklyDates, getMonthlyDates} from "../utils/libby.js"
-import {kayinGyiBooks, kayinGyiBooksBarcode, kayinGyiTemp, homeDirectory, kayinGyiCSVFile  } from "../utils/directories.js"
+import {kayinGyiBooks, kayinGyiBooksBarcode, kayinGyiTemp, homeDirectory, kayinGyiCSVFile, kayinGyiDirectory  } from "../utils/directories.js"
 import { mapBook } from "../utils/model.mapper.js"
 import {moveFile, deleteFile} from "../utils/libby.js"
 import loanModel from "../model/loan.model.js"
@@ -62,7 +62,7 @@ export const addBook = async(req, res, next) => {
         if(!req.files.bookCover){
             return fError(res, "Please upload a book cover", 400)
         }
-        // console.log("this is thhe req file " + JSON.stringify(req.files))
+
         if(!req.files.bookCover[0].mimetype.startsWith("image")){
             return fError(res, "Please upload the image only", 400)
         }
@@ -655,7 +655,11 @@ export const getBookDataCSV = async (req, res, next) => {
         })
         .on("end", async() => {
             await Promise.all(promises); 
-            await bookFormat.insertMany(results, {"ordered": false})
+            try{
+                await bookFormat.insertMany(results, {"ordered": false})
+            }catch(error){
+                console.log("error in inserting many function" + error)
+            }
             fMsg(res, "Data imported successfully", 200)
         })
         

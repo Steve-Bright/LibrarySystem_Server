@@ -7,9 +7,6 @@ import { BookSchema } from "../utils/data.entry.js";
 
 const router = express.Router();
 
-// router.post("/addBook", validateToken(),  upload.single("bookCover"), 
-//             (req, res, next) => addBook(req, res, next) .then((fileDirectory) => moveImage(fileDirectory, fileName))
-//         );
 router.post("/addBook", validateToken(),  upload.fields([{name: "bookCover"}, {name: "barcode"}]), validateBody(BookSchema.register),
             (req, res, next) => addBook(req, res, next) .then((fileDirectory) => moveImage(fileDirectory, req.fileNames))
         );
