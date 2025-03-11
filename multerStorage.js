@@ -18,7 +18,7 @@ const storage = multer.diskStorage({
         cb(null, kayinGyiTemp);
     },
     filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now();
+        const uniqueSuffix = Date.now() + file.fieldname + file.originalname;
         let prefixName;
         if(req.body.accNo){
             prefixName = req.body.accNo;
@@ -27,7 +27,6 @@ const storage = multer.diskStorage({
         }
         // const accessionNum = req.body.accNo; // Access req.body
         const generatedName  = prefixName + '-' + uniqueSuffix;
-        // fileName.push(generatedName)
         if(!req.fileNames) req.fileNames = []
         req.fileNames.push(generatedName)
         cb(null, generatedName);

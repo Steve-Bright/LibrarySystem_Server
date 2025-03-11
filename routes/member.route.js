@@ -17,7 +17,6 @@ router.get("/getAllMembers", validateToken(), getAllMembers)
 router.get("/getMember", validateToken(), getMember)
 router.get("/allLoans/:memberId", validateToken(), getMemberLoanHistory)
 router.post("/banMember", validateToken(), isManager(), toggleBanMember)
-// router.delete("/deleteMember", validateToken(), isManager(), deleteMember )
 router.delete("/deleteMember", validateToken(), isManager(), (req, res, next) =>  deleteMember(req, res, next).then((fileNames) => deleteImage(fileNames)))
 router.post("/extendMembership/:memberDatabaseId", validateToken(), isManager(), extendMembership)
 router.get("/getLatestMemberId/:memberType", validateToken(), getLatestMemberId);

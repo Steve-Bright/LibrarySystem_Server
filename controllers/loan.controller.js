@@ -233,62 +233,6 @@ export const searchLoan = async(req, res, next) => {
         if(!accNo && !memberId && !bookTitle && !name && !loanDate && !dueDate) {
             return fError(res, "Please specify the fields")
         }
-
-        // let memberFields = {};
-        // let bookFields = {}
-
-
-        // if(accNo){
-        //     bookFields["accNo"] = { $regex: accNo, $options: "i" }
-        // }
-
-        // if(memberId){
-        //     memberFields["memberId"] = { $regex: memberId, $options: "i" }
-        // }
-
-        // if(bookTitle){
-        //     bookFields["bookTitle"] = { $regex: bookTitle, $options: "i" }
-        // }
-
-        // if(name){
-        //     memberFields["name"] = { $regex: name, $options: "i" }
-        // }
-
-        // let combineBooks = [];
-        // if(bookFields != {}){
-        //     let engBooks = await engbook.find(bookFields).exec()
-        //     let mmBooks = await mmbook.find(bookFields).exec()
-
-            
-        //     if(engBooks.length > 0){
-        //         for(let eachEngBook of engBooks){
-        //             combineBooks.push(eachEngBook._id)
-        //         }
-        //     }
-
-        //     if(mmBooks.length > 0){
-        //         for(let eachMmBook of mmBooks){
-        //             combineBooks.push(eachMmBook._id)
-        //         }
-        //     }
-
-        //     if(engBooks.length == 0 && mmBooks.length == 0){
-        //         return fError(res, "Loan not found with such book name ", 400)
-        //     }
-
-        // }
-
-        // let memberFound;
-        // let memberIds = []
-        // if(memberFields != {}){
-        //     memberFound = await member.find(memberFields).exec()
-        //     if(!memberFound || memberFound.length === 0){
-        //         return fError(res, "Loan not found with such name", 400)
-        //     }
-        //     for(let eachMember of memberFound){
-        //         memberIds.push(eachMember)
-        //     }
-        // }
         let loanQuery = {};
 
         switch(loanType){
@@ -316,6 +260,14 @@ export const searchLoan = async(req, res, next) => {
 
         if(name){
             loanQuery["name"] = {$regex: name, $options: "i"}
+        }
+
+        if(loanDate){
+            loanQuery["loanDate"] = new Date(loanDate)
+        }
+
+        if(dueDate){
+            loanQuery["dueDate"] = new Date(dueDate)
         }
         // if (combineBooks.length > 0) {
         //     loanQuery["bookId"] = { $in: combineBooks };
