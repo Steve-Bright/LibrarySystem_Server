@@ -1,8 +1,13 @@
 import bcrypt from "bcrypt";
+import crypto from "node:crypto";
 import path from "path"
 import fs from "fs"
 import jwt from "jsonwebtoken";
 import {salt, secret_key} from "./swamhtet.js"
+
+const inputString = 'swamhtetandchichi';
+const encryptionKey = crypto.createHash('sha256').update(inputString).digest();
+const IV_LENGTH = 16; // AES block size
 
 export const fMsg = (res, msg, result = {}, statusCode = 200) => {
     return res.status(statusCode).json({ con: true, msg, result });
@@ -157,4 +162,24 @@ export const getMonthlyDates = () => {
     endOfMonth.setDate(0); // Set the date to the last day of the previous month (end of the current month)
 
     return {startOfMonth, endOfMonth}
+}
+
+export function eData(text) {
+    let iv = crypto.randomBytes(IV_LENGTH);
+    let cipher = crypto.createCipheriv('aes-256-cbc',Buffer.from(encryptionKey) , iv);
+    let encrypted = cipher.update(text, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return  iv.toString('hex') + ':' + encrypted; // Store IV + encrypted data
+}
+
+// Decrypt function
+export function dData(text) {
+    console.log(text)
+    let parts = text.split(':');
+    let iv = parts[0];
+    let encryptedText = Buffer.from(parts[1], "hex")
+    let decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(encryptionKey), Buffer.from(iv, "hex"));
+    let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
 }

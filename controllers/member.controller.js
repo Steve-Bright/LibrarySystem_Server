@@ -1,7 +1,7 @@
 import member from "../model/member.model.js"
 import banMemberModel from "../model/banmember.model.js"
 import bannedMemberModel from "../model/banmember.model.js"
-import {fMsg, fError, todayDate, nextYear, paginate, getAnotherMonth, getWeeklyDates, getMonthlyDates} from "../utils/libby.js"
+import {fMsg, fError, todayDate, nextYear, paginate, getAnotherMonth, getWeeklyDates, getMonthlyDates, eData, dData} from "../utils/libby.js"
 import { kayinGyiMembers, kayinGyiMembersBarcode, kayinGyiTemp, homeDirectory } from "../utils/directories.js"
 import { mapMember } from "../utils/model.mapper.js"
 import Loan from "../model/loan.model.js"
@@ -37,12 +37,13 @@ export const addMember = async(req, res, next) => {
             return fError(res, "Member id is already registered")
         }
 
-
+        let encryptedNRC
         if(nrc){
             let duplicateNRC = await member.findOne({nrc})
             if(duplicateNRC){
                 return fError(res, "Nrc already is registered")
             }
+            // encryptedNRC = eData(nrc)
         }
 
         if(email){
@@ -76,10 +77,12 @@ export const addMember = async(req, res, next) => {
             personalId,
             memberId, 
             name, 
-            nrc, 
+            nrc: encryptedNRC, 
             gender,
             phone,
             email,
+            // permanentAddress :eData(permanentAddress),
+            // currentAddress :eData(currentAddress),
             permanentAddress,
             currentAddress,
             photo: memberPhoto,
@@ -144,11 +147,13 @@ export const editMember = async(req, res, next) => {
             }
         }
 
+        // let encryptedNRC;
         if(nrc && nrc != ''){
             const sameNrc = await member.findOne({nrc})
             if(sameNrc){
                 return fError(res, "There is already duplicate nrc")
             }
+            // encryptedNRC = eData(nrc)
         }
 
         if(email){
@@ -162,6 +167,16 @@ export const editMember = async(req, res, next) => {
         if(samePhone){
             return fError(res, "There is already same phone number")
         }
+
+        // let encryptedCurrent;
+        // let encryptedPermanent;
+        // if(currentAddress){
+        //     encryptedCurrent = eData(currentAddress)
+        // }
+
+        // if(permanentAddress){
+        //     encryptedPermanent = eData(permanentAddress)
+        // }
 
 
         let memberPhoto
@@ -226,6 +241,11 @@ export const getMember = async(req, res, next) => {
         if(!memberFound){
             return fError(res, "There is no such member", 400)
         }
+        // if(memberFound.nrc){
+        //     memberFound.nrc = dData(memberFound.nrc)
+        // }
+        // memberFound.currentAddress = dData(memberFound.currentAddress)
+        // memberFound.permanentAddress = dData(memberFound.permanentAddress)
 
         fMsg(res, "Member fetched successfully", memberFound, 200)
     }catch(error){
@@ -294,8 +314,8 @@ export const getLatestMemberId = async(req, res, next) => {
                 return fError(res, "Wrong memberType value")
         }
         let memberId;
-        const latestMember = await member.findOne({memberType}).sort({memberId: -1})
-        console.log("latest member " + JSON.stringify(latestMember))
+        const latestMember = await member.findOne( {memberId: { $regex: `^${prefix}-\\d+$` }}).sort({memberId: -1})
+        // console.log("latest member " + JSON.stringify(latestMember))
         if(latestMember){
             let number = latestMember.memberId.split("-")
             number = Number(number[1])+1
@@ -402,25 +422,33 @@ export const checkBannedMembers = async(req, res, next) => {
 
 export const searchMember = async(req, res, next) => {
     try{
-        const {memberType, name, memberId, personalId} = req.body;
+        const {memberType = "all", name, email, memberId, personalId} = req.body;
 
-        if(!memberType && !name && !memberId && !personalId){
+        console.log(JSON.stringify({memberType, name, email, memberId, personalId}))
+
+        if(!memberType && !name && !email && !memberId && !personalId){
             return fError(res, "Please specify at least one field")
         }
         
         if(memberType){
-            if(memberType!= "teacher" && memberType != "student" && memberType != "staff"){
+            if(memberType != "all" && memberType!= "teacher" && memberType != "student" && memberType != "staff" && memberType != "public"){
                 return fError(res, "Wrong memberType values")
             }
         }
 
         let searchFields = {}
-        if(memberType){
-            searchFields["memberType"] = memberType
+        switch(memberType){
+            case "all": searchFields = {}
+            break;
+            default: searchFields = {memberType}
         }
 
         if(name){
             searchFields["name"] =  { $regex: name, $options: 'i' };
+        }
+
+        if(email){
+            searchFields["email"] = { $regex: email, $options: 'i' };
         }
 
         if(memberId){
