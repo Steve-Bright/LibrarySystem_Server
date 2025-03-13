@@ -1,5 +1,5 @@
-import {app, BrowserWindow, ipcMain, dialog} from "electron"
-import {encode} from "./utils/libby.js"
+import {app, BrowserWindow, session, ipcMain, dialog} from "electron"
+import {encode, decode} from "./utils/libby.js"
 import User from "./model/user.model.js";
 import connectToMongoDB  from "./config/connectMongoDb.js"
 import nodeServer from "./server.js"
@@ -35,7 +35,16 @@ app.on('window-all-closed', () => {
 })
 
 ipcMain.on("authenticateUser", (event, credentials) => {
-    if(credentials.username === "admin" && credentials.password === "89916002"){
+    if(credentials.username === "admin" && decode(credentials.password,"$2b$10$I4HzXhFb8ThSJCx8keSQOuDAtGWeMUkPsjeG.lTL7f1DYQZcoGw76")){
+        const cookie = { url: "http://localhost", name: "server", httpOnly: true, secure: false};
+        session.defaultSession.cookies
+          .set(cookie)
+          .then(() => {
+            console.log("Cookie is successfully set");
+          })
+          .catch((error) => {
+            console.error(error);
+          });
         win.loadFile("home.html")
     }else{
         dialog.showMessageBoxSync(win, {
@@ -124,5 +133,21 @@ ipcMain.on("stopServer", (event) => {
         event.sender.send("stopServerResponse", false)
     }
 })
+
+ipcMain.on("checkCookies", (event, data) => {
+    session.defaultSession.cookies
+      .get({ url: "http://localhost", name: "server" })
+      .then((cookies) => {
+        if(cookies.length === 0){
+            event.returnValue = { statusCode: 403}
+        }else{
+            event.returnValue = { statusCode: 200}
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  });
+
 
 export default win;
