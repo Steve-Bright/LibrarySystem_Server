@@ -1,0 +1,8 @@
+@font-face {
+  font-family: "Kadwa";
+  src: url("../font/Kadwa/Kadwa-Regular.ttf")
+}
+
+*{
+  font-family: "Kadwa";
+}

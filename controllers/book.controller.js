@@ -77,7 +77,7 @@ export const addBook = async(req, res, next) => {
 
         const sameAccNo = await bookFormat.findOne({ accNo})
         if(sameAccNo){
-            return fError(res, "There is already same duplicate accession number", 400)
+            return fError(res, "There is already same duplicate accession number", 400, "CB001")
         }
 
         const sameCallNo = await bookFormat.findOne({callNo})
@@ -799,4 +799,16 @@ export const  generateBarcodeTest = async(req, res, next) => {
         console.log('generate bar code error ' + error)
         next(error)
     }
+}
+
+export const deleteTempFiles = (req, res, next)=>{
+    fs.readdir(kayinGyiTemp, (err, files) => {
+        if (err) throw err;
+        
+        files.forEach(file => {
+          const filePath = path.join(kayinGyiTemp, file);
+            deleteFile(filePath)
+        });
+      });
+    fMsg(res, 'Temp Files deleted successfully', 200)
 }

@@ -34,7 +34,7 @@ export const addMember = async(req, res, next) => {
 
         let duplicateMemberId = await member.findOne({memberId})
         if(duplicateMemberId){
-            return fError(res, "Member id is already registered")
+            return fError(res, "Member id is already registered", 400, "CM001")
         }
 
         let encryptedNRC

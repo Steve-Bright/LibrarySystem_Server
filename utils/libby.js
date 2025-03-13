@@ -13,8 +13,8 @@ export const fMsg = (res, msg, result = {}, statusCode = 200) => {
     return res.status(statusCode).json({ con: true, msg, result });
 };
 
-export const fError = (res, msg, statusCode = 500) => {
-    return res.status(statusCode).json({ con: false, msg});
+export const fError = (res, msg, statusCode = 500, errorCode = null) => {
+    return res.status(statusCode).json({ con: false, msg, errorCode});
 };
 
 export const encode = (payload) => {
