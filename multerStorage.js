@@ -18,10 +18,15 @@ const storage = multer.diskStorage({
         cb(null, kayinGyiTemp);
     },
     filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now();
-        const accessionNum = req.body.accNo; // Access req.body
-        const generatedName  = accessionNum + '-' + uniqueSuffix;
-        // fileName.push(generatedName)
+        const uniqueSuffix = Date.now() + file.fieldname + file.originalname;
+        let prefixName;
+        if(req.body.accNo){
+            prefixName = req.body.accNo;
+        }else if(req.body.memberId){
+            prefixName = req.body.memberid;
+        }
+        // const accessionNum = req.body.accNo; // Access req.body
+        const generatedName  = prefixName + '-' + uniqueSuffix;
         if(!req.fileNames) req.fileNames = []
         req.fileNames.push(generatedName)
         cb(null, generatedName);

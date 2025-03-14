@@ -2,14 +2,17 @@ import mmbook from "../model/mmbook.model.js"
 import engbook from "../model/engbook.model.js"
 import Loan from "../model/loan.model.js"
 import csvParser from "csv-parser"
+import JsBarcode from "jsbarcode"
+import { createCanvas, createImageData } from "canvas"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
 import deletedbook from "../model/deletedbook.model.js"
 import {fMsg, fError, paginate, getWeeklyDates, getMonthlyDates} from "../utils/libby.js"
-import {kayinGyiBooks, kayinGyiBooksBarcode, kayinGyiTemp, homeDirectory, kayinGyiCSVFile  } from "../utils/directories.js"
+import {kayinGyiBooks, kayinGyiBooksBarcode, kayinGyiTemp, homeDirectory, kayinGyiCSVFile, kayinGyiDirectory  } from "../utils/directories.js"
 import { mapBook } from "../utils/model.mapper.js"
 import {moveFile, deleteFile} from "../utils/libby.js"
+import loanModel from "../model/loan.model.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -59,7 +62,7 @@ export const addBook = async(req, res, next) => {
         if(!req.files.bookCover){
             return fError(res, "Please upload a book cover", 400)
         }
-        // console.log("this is thhe req file " + JSON.stringify(req.files))
+
         if(!req.files.bookCover[0].mimetype.startsWith("image")){
             return fError(res, "Please upload the image only", 400)
         }
@@ -74,7 +77,7 @@ export const addBook = async(req, res, next) => {
 
         const sameAccNo = await bookFormat.findOne({ accNo})
         if(sameAccNo){
-            return fError(res, "There is already same duplicate accession number", 400)
+            return fError(res, "There is already same duplicate accession number", 400, "CB001")
         }
 
         const sameCallNo = await bookFormat.findOne({callNo})
@@ -223,7 +226,6 @@ export const editBook = async(req, res, next) => {
         let bookCover;
         let actualBookCover;
         let oldBookCover
-        console.log("this is req files " + JSON.stringify(req.file))
         if(editedPhoto && req.file){
             const fileName = bookAccNo + "-" + Date.now() + ".png"
             bookCover = "/KayinGyi/books/" + fileName
@@ -274,8 +276,6 @@ export const editBook = async(req, res, next) => {
         const updatedBook = await bookFormat.findByIdAndUpdate(bookId, bookData, {new: true})
 
         fMsg(res, "Book updated successfully", updatedBook, 200)
-        console.log("This is old book cover " + oldBookCover)
-        console.log("This is actual book cover " + actualBookCover)
         return [oldBookCover, actualBookCover]
     }catch(error){
         console.log("edit book error: " + error)
@@ -343,8 +343,18 @@ export const getAllBooks = async(req, res, next) => {
             return fError(res, "Wrong category input", 400)
         }
 
+        let populate = {
+            latestLoanId: "loanStatus overdue dueDate"
+        }
+
+        const populateString = Object.entries(populate).map(
+            ([path, select]) => ({
+                path,
+                select,
+            })
+        );
         
-        const books = await paginate(bookFormat, null, page, 10,"createdAt")
+        const books = await paginate(bookFormat, null, page, 10,"accNo", populateString)
         fMsg(res, "Books fetched successfully", books, 200)
     }catch(error){
         console.log("get all books error " + error)
@@ -403,9 +413,8 @@ export const getLatestAccNo = async(req, res, next) => {
         if(deletedBook){
             accNo = deletedBook.accNo;
         }else{
-            const latestBook = await bookFormat.findOne().sort({_id: -1})
+            const latestBook = await bookFormat.findOne().sort({accNo: -1})
             if(latestBook){
-                // let number = latestBook.accNo.split("-")
                 let number = Number(latestBook.accNo)+1
                 let totalNumber = 6;
                 let finalNumber = String(number);
@@ -462,14 +471,13 @@ const innerLatestAccNo = async(category, numberIndex) => {
 
 export const searchBook = async(req, res, next) => {
     try{
-
-        const {category, accNo, bookTitle, sor, publisher, classNo, isbn} = req.body;
+        const {category, accNo, bookTitle, sor, publisher, subject, isbn} = req.body;
 
         if(!category){
             return fError(res, "Please enter  the required field")
         }
 
-        if(!accNo && !bookTitle && !sor && !publisher && !classNo && !isbn){
+        if(!accNo && !bookTitle && !sor && !publisher && !subject && !isbn){
             return fError(res, "Please enter the specifc fields ")
         }
 
@@ -490,10 +498,14 @@ export const searchBook = async(req, res, next) => {
         if(publisher){
             searchFields["publisher"] = { $regex: publisher, $options: 'i' };
         }
-        if(classNo){
-            searchFields["classNo"] = { $regex: classNo, $options: 'i' };
+        if(subject){
+            searchFields["$or"] = [
+                { subjectOne: { $regex: subject, $options: 'i' } },
+                { subjectTwo: { $regex: subject, $options: 'i' } },
+                { subjectThree: { $regex: subject, $options: 'i' } }
+            ];
         }
-
+   
         let bookFormat;
         if(category == "myanmar"){
             bookFormat = mmbook
@@ -519,8 +531,6 @@ export const getBookLoanHistory = async(req, res, next) =>{
   try{
     const bookId = req.params.bookId;
     const loanHistories = await Loan.find({bookId})
-            .populate("bookId", "bookTitle category")
-            .populate("memberId", "memberId name")
 
     fMsg(res, "Loan History", loanHistories, 200)
 
@@ -588,7 +598,6 @@ export const getBookDataCSV = async (req, res, next) => {
         const requiredFields = ["accNo", "bookTitle", "classNo", "callNo", "sor", "isbn", "initial"]
         
 
-        const dummyImagePath = path.join(__dirname, "blank_book.jpg");
         let results = []
         let promises = []
 
@@ -603,18 +612,16 @@ export const getBookDataCSV = async (req, res, next) => {
                     }
                 }
             },
-            delimiter: ',,,'
+            delimiter: ','
         }))
         .on("data", async(data) => {
             let promise = (async () => {
                 for(let field of requiredFields){
                     if(!data[field]){
                        if(field === "accNo"){
+                        let canvas = createCanvas();
                         let number = await innerLatestAccNo(category, accNumberIndex)
                         data[field] = number.accNo;
-                        console.log("number index " + number.numberIndex)
-                        // accNumberIndex = number.numberIndex
-
                        }else if(field === "callNo"){
                         let accessionNumber = data["accNo"] || "AccNo " + callNumberIndex
                         let initial = data["initial"] || "Intial"
@@ -623,33 +630,38 @@ export const getBookDataCSV = async (req, res, next) => {
                         callNumberIndex += 1;
                        }
                        else{
-                        data[field] = "N/A"
+                        data[field] = "-"
                        }
                     }
                 }
-                data.bookCover = dummyImagePath
+                data.bookCover = "rcs_no_image"
+                let canvas = createCanvas();
+                let storedData = `${ category +","+ data.accNo }`;
+
+                let barcodeName = data.accNo + "-barcode-" + Date.now() + ".png"
+                let actualBookBarcode = kayinGyiBooksBarcode + barcodeName
+                let barcodePath = "/KayinGyi/booksBarcodes/" + barcodeName
+                let image;
+                JsBarcode(canvas, storedData, { displayValue: false });
+                
+                image = canvas.toBuffer("image/png");
+                
+                fs.writeFileSync(actualBookBarcode, image);
+                data["barcode"] = barcodePath
                 results.push(data)
             })();
             promises.push(promise)
-            // for(let field of requiredFields){
-            //     if(!data[field]){
-            //        if(field === "accNo"){
-            //         data[field] = await innerLatestAccNo(category)
-            //        }else{
-            //         data[field] = "N/A"
-            //        }
-            //     }
-            // }
-            // data.bookCover = dummyImagePath
 
         })
         .on("end", async() => {
             await Promise.all(promises); 
-            // console.log("these are results" + JSON.stringify(results))
-            await bookFormat.insertMany(results, {"ordered": false})
+            try{
+                await bookFormat.insertMany(results, {"ordered": false})
+            }catch(error){
+                console.log("error in inserting many function" + error)
+            }
+            fMsg(res, "Data imported successfully", 200)
         })
-
-        fMsg(res, "Data imported successfully", results, 200)
         
     }catch(error){
         console.log("get book data csv error " + error)
@@ -682,6 +694,44 @@ export const numOfBooks = async(req, res, next) => {
 
     }catch(error){
         console.log("error number of books " + error)
+        next(error)
+    }
+}
+
+export const getLatestLoan = async(req, res, next) => {
+    try{
+        const {bookId, category} = req.query;
+
+        if(!bookId || !category){
+            return fError(res, "Need at least one field to get lateset loan")
+        }
+
+        let bookFormat;
+        if(category == "myanmar"){
+            bookFormat = mmbook
+        }else{
+            bookFormat = engbook
+        }
+
+        let bookFound = await bookFormat.findById(bookId)
+        if(!bookFound){
+            return fError(res, "Book is not found")
+        }
+
+        if(!bookFound.loanStatus){
+            return fError(res, "Book is not being loaned at the moment", 400)
+        }
+
+        let loanFound = await loanModel.findOne({bookDatabaseId: bookId, loanStatus: true})
+        .select("_id loanStatus name phone dueDate overdue")
+        if(!loanFound){
+            return fError(res, "Something went wrong")
+        }
+
+        fMsg(res, "Latest Loan found" , loanFound, )
+
+    }catch(error){
+        console.log('gettng latest loan error ' + error)
         next(error)
     }
 }
@@ -726,4 +776,39 @@ export function editImage(fileNames, editedFile){
     }
     
 
+}
+
+export const  generateBarcodeTest = async(req, res, next) => {
+    try{
+        const {category, accNo} = req.body;
+        const canvas = createCanvas();
+        let storedData = `${ category +","+ accNo }`;
+
+        const barcodeName = accNo + "-barcode-" + Date.now() + ".png"
+        const actualBookBarcode = kayinGyiBooksBarcode + barcodeName
+        let image;
+        JsBarcode(canvas, storedData, { displayValue: false });
+
+        image = canvas.toBuffer("image/png");
+
+        fs.writeFileSync(actualBookBarcode, image);
+        
+        fMsg(res, "You might have generated barcode image " , 200)
+        
+    }catch(error){
+        console.log('generate bar code error ' + error)
+        next(error)
+    }
+}
+
+export const deleteTempFiles = (req, res, next)=>{
+    fs.readdir(kayinGyiTemp, (err, files) => {
+        if (err) throw err;
+        
+        files.forEach(file => {
+          const filePath = path.join(kayinGyiTemp, file);
+            deleteFile(filePath)
+        });
+      });
+    fMsg(res, 'Temp Files deleted successfully', 200)
 }

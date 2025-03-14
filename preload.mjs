@@ -22,6 +22,11 @@ const serverFunction = {
     serverStatusResponse: (event) => ipcRenderer.on("serverStatusResponse", event)
 }
 
+const cookieFunction = {
+    checkCookie: ()=> ipcRenderer.sendSync("checkCookies")
+}
+
 contextBridge.exposeInMainWorld("navigationApi", navigationFunction)
 contextBridge.exposeInMainWorld("authenticateApi", authenticateFunction)
 contextBridge.exposeInMainWorld("serverApi", serverFunction)
+contextBridge.exposeInMainWorld("cookieApi", cookieFunction)

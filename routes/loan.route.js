@@ -6,7 +6,7 @@ import { validateToken, isManager } from "../utils/validator.js"
 const router = express.Router()
 
 router.post("/addLoan", validateToken(), addLoan)
-router.get("/checkLoan", validateToken(), checkLoan)
+router.get("/checkLoan",  checkLoan)
 router.post("/returnLoan/:loanId", validateToken(), returnLoan)
 router.delete("/deleteLoan/:loanId", validateToken(), deleteLoan)
 router.post("/searchLoan", validateToken(), searchLoan)

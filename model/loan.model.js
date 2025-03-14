@@ -1,22 +1,62 @@
 import mongoose from "mongoose";
 
 const loanSchema = new mongoose.Schema({
-    memberId: {
+    memberDatabaseId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Member",
-        required: true,
         index: true
     },
-    bookId: {
+    bookDatabaseId: {
         type: mongoose.Schema.Types.ObjectId,
         refPath: "bookModel",
-        required: true,
         index: true
     },
     bookModel: {
         type: String,
         required: true,
         enum: ["engbook", "mmbook"]
+    },
+    accNo: {
+        type: String,
+        required: true
+    },
+    category: {
+        type: String,
+        enum: ["english", "myanmar"],
+        required: true
+    },
+    callNo: {
+        type: String,
+        required: true
+    },
+    bookTitle: {
+        type: String,
+        required: true
+    },
+    bookCover: {
+        type: String,
+        required: true
+    },
+    memberId: {
+        type: String,
+        required: true
+    },
+    name: {
+        type: String,
+        required: true
+    }, 
+    memberType: {
+        type: String,
+        enum: ["student", "teacher", "staff", "public"],
+        required: true
+    },
+    phone: {
+        type: String,
+        required: true
+    },
+    photo: {
+        type: String,
+        required: true
     },
     loanDate: {
         type: Date,
@@ -26,6 +66,9 @@ const loanSchema = new mongoose.Schema({
         type: Date,
         required: true,
         index: true
+    },
+    returnDate: {
+        type: Date
     },
     duration: {
         type: String, 

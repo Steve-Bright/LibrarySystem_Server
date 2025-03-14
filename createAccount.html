@@ -1,32 +1,75 @@
 <!DOCTYPE html>
     <head>
         <title>Create Library Member accounts</title>
+        <style>
+
+            #createMemberAccount{
+                width: 80%; 
+                margin: 0 auto;
+            }
+            #createMemberAccount div{
+                display: flex;
+                margin: 0.2em 0;
+                justify-content: space-between;
+            }
+
+            #createMemberAccount div label{
+                /* color: white; */
+                font-size: 0.9em;
+            }
+
+            #createMemberAccount div input{
+                border-radius: 10px;
+            }
+            
+        </style>
+        <link rel="stylesheet" href="./server-ui/style.css">
     </head>
     <body>
         <button id="backToHome">Go back</button>
         <br><br>
         <form id="createMemberAccount">
 
-            <label for="userName">Member Name:</label>
-            <input type="text" id="userName" name="userName" required>
-            <br><br>
+            <div>
+                <div>
+                    <label for="userName">Member Name:</label>
+                </div>
+                <div>
+                    <input type="text" id="userName" name="userName" required>
+                </div>
+            </div>
+            
+            <div>
+                <div>
+                    <label for="memberEmail">Member Email:</label>
+                </div>
+                <div>
+                    <input type="email" id="memberEmail" name="memberEmail" required>
+                </div>
+            </div>
 
-            <label for="memberEmail">Member Email:</label>
-            <input type="email" id="memberEmail" name="memberEmail" required>
+            <div>
+                <div>
+                    <label for="memberPassword">Member Password</label>
+                </div>
+                <div>
+                    <input type="password" id="memberPassword" name="memberPassword" required>
+                </div>
+                
+            </div>
 
-            <br><br>
-            <label for="memberPassword">Member Password</label>
-            <input type="password" id="memberPassword" name="memberPassword" required>
+            <div>
+                <div>
+                    <label for="memberRole">MemberRole: </label>
+                </div>
+                <div>
+                    <input type="radio" id="manager" name="memberRole" value="manager">
+                    <label for="manager">Manager</label>
+                    <input type="radio" id="helper" name="memberRole" value="helper">
+                    <label for="helper">Helper</label><br>
+                </div>
 
-            <br><br>
-
-            <label for="memberRole">MemberRole: </label>
-            <input type="radio" id="manager" name="memberRole" value="manager">
-            <label for="manager">Manager</label>
-            <input type="radio" id="helper" name="memberRole" value="helper">
-            <label for="helper">Helper</label><br>
-
-            <br><br>
+            </div>
             <button type="submit">Create Account</button>
         </form>
     </body>
@@ -47,4 +90,5 @@
             await window.authenticateApi.createAccount(memberDetails)
         }
     </script>
+    <script src="./server-ui/universal.js" defer></script>
 </html>

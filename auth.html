@@ -3,19 +3,67 @@
         <title>Library Server</title>
     </head>
 
+    <style>
+        body{
+            background-color: #1E3FAD;
+        }
+
+        #mainContent{
+            margin: auto;
+            width: 80%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #rcsLogo{
+            width: 60%;
+        }
+
+        #serverAuthentication{
+            width: 80%;
+        }
+
+        #serverAuthentication div{
+            margin: 0.5em 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        label{
+            color: white;
+            font-size: 0.9em;
+        }
+
+        input{
+            height: 1.5em;
+            border-radius: 5px;
+        }
+
+    </style>
+     <link rel="stylesheet" href="./server-ui/style.css">
+
     <body>
-        <form id="serverAuthentication">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
+        <div id="mainContent">
 
-            <br>
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" required>
 
-            <br>
+            <img src="./rcs_server_transparent.png" id="rcsLogo">
+                <form id="serverAuthentication">
+                    <div>
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
 
-            <button type="submit">Submit</button>
-        </form>
+                    <div>
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+
+                        <button type="submit">Submit</button>
+                </form>
+
+        </div>
     </body>
 
     <script>

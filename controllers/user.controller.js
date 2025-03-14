@@ -4,6 +4,7 @@ import { decode, fError, fMsg , genToken} from "../utils/libby.js";
 export const login = async (req, res) => {
     try{
         let{ email, password } = req.body;
+        console.log("this works " + email + password)
         if(!email || !password){
             return fError(res, "All fields are required", 400);
         }

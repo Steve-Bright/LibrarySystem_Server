@@ -1,7 +1,6 @@
 import express from "express"
 import path from "path"
 import fs from "fs"
-import os from "os"
 import { fileURLToPath } from "url"
 import bodyParser from "body-parser"
 
@@ -85,8 +84,8 @@ app.use((err, req, res, next) => {
     res.status(err.status).json({ con: false, msg: err.message });
   });
 
-app.listen(3000, () => {
-    connectToMongoDB();
-    console.log('Server is running on port 3000');
-});
+// app.listen(3000, () => {
+//     connectToMongoDB();
+//     console.log('Server is running on port 3000');
+// });
 export default app;

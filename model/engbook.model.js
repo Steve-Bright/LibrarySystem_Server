@@ -133,7 +133,12 @@ const bookSchema = new mongoose.Schema({
     loanStatus: {
         type: Boolean,
         default: false
-    }
+    },
+    latestLoanId: {
+       type: mongoose.Schema.Types.ObjectId,
+       ref: "loan",
+       index: true
+    } 
     
 }, {
     timestamps: { createdAt: true, updatedAt: false }

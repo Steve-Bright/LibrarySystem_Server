@@ -1,8 +1,8 @@
 import member from "../model/member.model.js"
 import banMemberModel from "../model/banmember.model.js"
 import bannedMemberModel from "../model/banmember.model.js"
-import {fMsg, fError, todayDate, nextYear, paginate, getAnotherMonth, getWeeklyDates, getMonthlyDates} from "../utils/libby.js"
-import { kayinGyiMembers, kayinGyiMembersBarcode, kayinGyiTemp } from "../utils/directories.js"
+import {fMsg, fError, todayDate, nextYear, paginate, getAnotherMonth, getWeeklyDates, getMonthlyDates, eData, dData} from "../utils/libby.js"
+import { kayinGyiMembers, kayinGyiMembersBarcode, kayinGyiTemp, homeDirectory } from "../utils/directories.js"
 import { mapMember } from "../utils/model.mapper.js"
 import Loan from "../model/loan.model.js"
 
@@ -34,15 +34,16 @@ export const addMember = async(req, res, next) => {
 
         let duplicateMemberId = await member.findOne({memberId})
         if(duplicateMemberId){
-            return fError(res, "Member id is already registered")
+            return fError(res, "Member id is already registered", 400, "CM001")
         }
 
-
+        let encryptedNRC
         if(nrc){
             let duplicateNRC = await member.findOne({nrc})
             if(duplicateNRC){
                 return fError(res, "Nrc already is registered")
             }
+            // encryptedNRC = eData(nrc)
         }
 
         if(email){
@@ -76,10 +77,12 @@ export const addMember = async(req, res, next) => {
             personalId,
             memberId, 
             name, 
-            nrc, 
+            nrc: encryptedNRC, 
             gender,
             phone,
             email,
+            // permanentAddress :eData(permanentAddress),
+            // currentAddress :eData(currentAddress),
             permanentAddress,
             currentAddress,
             photo: memberPhoto,
@@ -136,14 +139,21 @@ export const editMember = async(req, res, next) => {
             return fError(res, "There is already duplicate member id ")
         }
 
-        if(nrc == ""){
-            memberFound.nrc = undefined;
-            await memberFound.save()
-        }else if(nrc && nrc != ''){
+        if(memberType === "staff" || memberType === "teacher" || memberType === "public"){
+            if((memberFound.memberType === "student" && !nrc)){
+                if(!memberFound.nrc){
+                    return fError(res, "Need nrc number for changing membertype from student or other")
+                }
+            }
+        }
+
+        // let encryptedNRC;
+        if(nrc && nrc != ''){
             const sameNrc = await member.findOne({nrc})
             if(sameNrc){
                 return fError(res, "There is already duplicate nrc")
             }
+            // encryptedNRC = eData(nrc)
         }
 
         if(email){
@@ -158,13 +168,25 @@ export const editMember = async(req, res, next) => {
             return fError(res, "There is already same phone number")
         }
 
-        let fileName;
+        // let encryptedCurrent;
+        // let encryptedPermanent;
+        // if(currentAddress){
+        //     encryptedCurrent = eData(currentAddress)
+        // }
+
+        // if(permanentAddress){
+        //     encryptedPermanent = eData(permanentAddress)
+        // }
+
+
         let memberPhoto
         let actualMemberPhoto
+        let oldMemberPhoto;
         if(editedPhoto && req.file){
-            fileName = memberIdFound + "-" + Date.now() + ".png"
+            const fileName = memberIdFound + "-" + Date.now() + ".png"
             memberPhoto = "/KayinGyi/members/" + fileName
             actualMemberPhoto = kayinGyiMembers + fileName
+            oldMemberPhoto = homeDirectory + memberFound.photo
         }
 
         const updatedMemberData = mapMember({
@@ -187,7 +209,7 @@ export const editMember = async(req, res, next) => {
 
         await updatedMember.save();
         fMsg(res, "Member is edited successfully", updatedMember, 200)
-        return [actualMemberPhoto]
+        return [oldMemberPhoto, actualMemberPhoto]
 
     }catch(error){
         console.log("edit member error " + error)
@@ -219,6 +241,11 @@ export const getMember = async(req, res, next) => {
         if(!memberFound){
             return fError(res, "There is no such member", 400)
         }
+        // if(memberFound.nrc){
+        //     memberFound.nrc = dData(memberFound.nrc)
+        // }
+        // memberFound.currentAddress = dData(memberFound.currentAddress)
+        // memberFound.permanentAddress = dData(memberFound.permanentAddress)
 
         fMsg(res, "Member fetched successfully", memberFound, 200)
     }catch(error){
@@ -257,7 +284,10 @@ export const deleteMember = async(req, res, next) => {
             return fError(res, "Member to be deleted is not found", 200)
         }
 
+        const actualMemberBarcode = homeDirectory + deleteMember.barcode;
+        const actualMemberPhoto = homeDirectory + deletedMember.photo
         fMsg(res, "Member deleted successfully", deletedMember, 200)
+        return [actualMemberBarcode, actualMemberPhoto]
     }catch(error){
         console.log("delete member error " + error)
         next(error)
@@ -284,7 +314,8 @@ export const getLatestMemberId = async(req, res, next) => {
                 return fError(res, "Wrong memberType value")
         }
         let memberId;
-        const latestMember = await member.findOne({memberType}).sort({_id: -1})
+        const latestMember = await member.findOne( {memberId: { $regex: `^${prefix}-\\d+$` }}).sort({memberId: -1})
+        // console.log("latest member " + JSON.stringify(latestMember))
         if(latestMember){
             let number = latestMember.memberId.split("-")
             number = Number(number[1])+1
@@ -349,7 +380,7 @@ export const extendMembership = async (req, res, next) => {
     try{
         const memberDatabaseId = req.params.memberDatabaseId;
         let today = todayDate()
-        let expiryDate = nextYear();
+        let expiryDate = getAnotherMonth(5);
         if(!memberDatabaseId){
             return fError(res, "Member id not found")
         }
@@ -391,25 +422,33 @@ export const checkBannedMembers = async(req, res, next) => {
 
 export const searchMember = async(req, res, next) => {
     try{
-        const {memberType, name, memberId, personalId} = req.body;
+        const {memberType = "all", name, email, memberId, personalId} = req.body;
 
-        if(!memberType && !name && !memberId && !personalId){
+        console.log(JSON.stringify({memberType, name, email, memberId, personalId}))
+
+        if(!memberType && !name && !email && !memberId && !personalId){
             return fError(res, "Please specify at least one field")
         }
         
         if(memberType){
-            if(memberType!= "teacher" && memberType != "student" && memberType != "staff"){
+            if(memberType != "all" && memberType!= "teacher" && memberType != "student" && memberType != "staff" && memberType != "public"){
                 return fError(res, "Wrong memberType values")
             }
         }
 
         let searchFields = {}
-        if(memberType){
-            searchFields["memberType"] = memberType
+        switch(memberType){
+            case "all": searchFields = {}
+            break;
+            default: searchFields = {memberType}
         }
 
         if(name){
             searchFields["name"] =  { $regex: name, $options: 'i' };
+        }
+
+        if(email){
+            searchFields["email"] = { $regex: email, $options: 'i' };
         }
 
         if(memberId){
@@ -437,8 +476,6 @@ export const getMemberLoanHistory = async(req, res, next) => {
     try{
         const memberId = req.params.memberId;
         const loanHistories = await Loan.find({memberId})
-                .populate("bookId", "bookTitle category")
-                .populate("memberId", "memberId name")
         fMsg(res, "Loan History", loanHistories, 200)        
     }catch(error){
         console.log('get member loan history error ' + error)
@@ -475,8 +512,6 @@ export const numOfMembers = async(req, res, next) => {
         let publicField = {...adjustDate};
         publicField["memberType"] = "public"
 
-
-        console.log(JSON.stringify(studentField))
 
         totalMembers["total"] = await member.countDocuments(adjustDate)
         totalMembers["teachers"] = await member.countDocuments(teacherField)
