@@ -64,9 +64,9 @@
         function checkServerStatus(){
             window.serverApi.serverStatus()
             window.serverApi.serverStatusResponse((event, response) => {
-                console.log("Server status: " + response);
 
                 if (response) {
+                    console.log("response " + response)
                     let ports = response.split("::::")
                     serverStatus.innerHTML = `Server is running in port ${ports[1]}`
                     

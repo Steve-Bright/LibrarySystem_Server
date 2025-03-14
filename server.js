@@ -1,7 +1,6 @@
 import express from "express"
 import path from "path"
 import fs from "fs"
-import os from "os"
 import { fileURLToPath } from "url"
 import bodyParser from "body-parser"
 

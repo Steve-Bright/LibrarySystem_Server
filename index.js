@@ -95,6 +95,8 @@ ipcMain.on("createAccount", async(event, credentials) => {
             })
             return;
         }
+
+        // User.countDocuments
         credentials.password = encode(credentials.password)
         let user = new User(credentials);
         await user.save();
