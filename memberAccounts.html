@@ -1,17 +1,55 @@
 <!DOCTYPE html>
     <head>
         <title>Member Accounts</title>
+        <style>
+            #memberTable #userAccountData{
+                width: 100%;
+            }
+
+            #memberTable td{
+                padding: 1em 0;
+                text-align: center;
+            }
+
+            .userName{
+                max-width: 7em;
+                overflow: auto;
+            }
+
+            .email{
+                width: 50%;
+                overflow: auto;
+            }
+
+            .role{
+                width: 25%;
+            }
+
+            .deleteImage{
+                width: 10%;
+            }
+
+            .deleteIcon{
+                width: 100%;
+                height: 100%;
+            }
+
+            .deleteImage:hover{
+                cursor: pointer;
+            }
+        </style>
     </head>
 
     <body>
         <button id="backToHome">Back to home</button>
         <br>
         <h3>Member Accounts</h3>
-        <table>
+        <table id="memberTable" border="1" cellpadding="0" cellspacing="0">
             <thead>
                 <th>Username</th>
                 <th>Email</th>
                 <th>Role</th>
+                <th></th>
             </thead>
 
             <tbody id="userAccountData">
@@ -37,18 +75,41 @@
                 let username = document.createElement("td")
                 let email = document.createElement("td")
                 let role = document.createElement("td")
+                let imageTd = document.createElement("td")
+                let deleteImage = document.createElement("img")
 
                 username.innerHTML = user.userName
+                username.classList.add("userName")
                 email.innerHTML = user.email
+                email.classList.add("email")
                 role.innerHTML = user.role
+                role.classList.add("role")
+                deleteImage.src = "./server-ui/delete.png"
+                deleteImage.classList.add("deleteIcon")
+                imageTd.classList.add("deleteImage")
+                imageTd.append(deleteImage)
+                imageTd.id = user._id;
 
                 row.appendChild(username)
                 row.appendChild(email)
                 row.appendChild(role)
+                row.appendChild(imageTd)
 
                 userAccountData.appendChild(row)
             });
+            buttonFunctionality()
         })
+
+        function buttonFunctionality(){
+            const detailsButton = document.querySelectorAll(".deleteImage")
+            for(let eachDeleteButton of detailsButton){
+            eachDeleteButton.addEventListener("click", () => {
+                window.authenticateApi.deleteAccount(eachDeleteButton.id)
+            })
+        }
+        }
+
+
     </script>
     <script src="./server-ui/universal.js" defer></script>
 </html>
