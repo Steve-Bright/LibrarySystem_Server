@@ -213,6 +213,11 @@ export const deleteLoan = async(req, res, next) => {
             return fError(res, "Please enter the required field")
         }
 
+        const loanFound = await loanModel.findById(loanId)
+        if(loanFound.loanStatus){
+            return fError(res, "Book has not been returned yet.")
+        }
+
         const deletedLoan = await loanModel.findByIdAndDelete(loanId)
         if(!deletedLoan){
             return fError(res, "Loan not found",)

@@ -15,6 +15,7 @@ const createWindow = () => {
     win = new BrowserWindow({
       width: 500,
       height: 300,
+      title: "RCS Server",
       resizable: false, 
       webPreferences: {
         nodeIntegration: true,
@@ -23,7 +24,7 @@ const createWindow = () => {
       }
     })
     win.loadFile('auth.html')
-    // win.removeMenu();
+    win.removeMenu();
     // win.webContents.openDevTools();
 }
 
