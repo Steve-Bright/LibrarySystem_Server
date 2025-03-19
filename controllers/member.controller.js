@@ -25,11 +25,13 @@ export const addMember = async(req, res, next) => {
         } = req.body
 
 
-
-        let duplicatePersonalId = await member.findOne({personalId})
-        if(duplicatePersonalId){
-            return fError(res, "Personal id has already been used as a library member")
+        if(personalId){
+            let duplicatePersonalId = await member.findOne({personalId})
+            if(duplicatePersonalId){
+                return fError(res, "Personal id has already been used as a library member")
+            }
         }
+
 
 
         let duplicateMemberId = await member.findOne({memberId})
@@ -241,11 +243,6 @@ export const getMember = async(req, res, next) => {
         if(!memberFound){
             return fError(res, "There is no such member", 400)
         }
-        // if(memberFound.nrc){
-        //     memberFound.nrc = dData(memberFound.nrc)
-        // }
-        // memberFound.currentAddress = dData(memberFound.currentAddress)
-        // memberFound.permanentAddress = dData(memberFound.permanentAddress)
 
         fMsg(res, "Member fetched successfully", memberFound, 200)
     }catch(error){
@@ -282,6 +279,10 @@ export const deleteMember = async(req, res, next) => {
         const deletedMember = await member.findByIdAndDelete(memberDatabaseId)
         if(!deletedMember){
             return fError(res, "Member to be deleted is not found", 200)
+        }
+
+        if(deletedMember.loanBooks > 0){
+            return fError(res, "Member still has a loan!", 400)
         }
 
         const actualMemberBarcode = homeDirectory + deleteMember.barcode;

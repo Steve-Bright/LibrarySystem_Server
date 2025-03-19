@@ -8,12 +8,9 @@ export const MemberSchema = {
           .label("Member Type")
           .required(),
 
-        personalId: Joi.when("memberType", {
-          is: "student",
-          then: Joi.string().required(),
-          otherwise: Joi.optional()
-        })
-        .label("Personal Id"),
+        personalId: Joi.string()
+          .label("Personal Id")
+          .optional(),
         
         name: Joi.string()
           .label("Member's name")

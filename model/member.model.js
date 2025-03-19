@@ -13,7 +13,8 @@ const memberSchema = new mongoose.Schema({
     personalId: {
         type: String,
         unique: true,
-        index: true 
+        index: true,
+        sparse: true
     },
     memberId: {
         type: String,
