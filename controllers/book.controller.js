@@ -218,9 +218,11 @@ export const editBook = async(req, res, next) => {
             }
         }
 
-        const sameCallNo = await bookFormat.findOne({callNo})
-        if(sameCallNo){
-            return fError(res, "There is already same call number", 400)
+        if(callNo){
+            const sameCallNo = await bookFormat.findOne({callNo})
+            if(sameCallNo){
+                return fError(res, "There is already same call number", 400)
+            }
         }
         
         let bookCover;

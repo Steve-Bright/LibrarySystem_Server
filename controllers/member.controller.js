@@ -79,7 +79,7 @@ export const addMember = async(req, res, next) => {
             personalId,
             memberId, 
             name, 
-            nrc: encryptedNRC, 
+            nrc, 
             gender,
             phone,
             email,
@@ -131,9 +131,11 @@ export const editMember = async(req, res, next) => {
             return fError(res, "Member is not found", 404)
         }
 
-        const samePersonalId = await member.findOne({personalId})
-        if(samePersonalId){
-            return fError(res, "There is already duplicate personal id")
+        if(personalId){
+            const samePersonalId = await member.findOne({personalId})
+            if(samePersonalId){
+                return fError(res, "There is already duplicate personal id")
+            }
         }
 
         const sameMemberId = await member.findOne({memberId})
@@ -276,13 +278,15 @@ export const deleteMember = async(req, res, next) => {
             return fError(res, "Please enter the member", 400)
         }
 
+        const tobeDeletedMember = await member.findById(memberDatabaseId)
+
+        if(tobeDeletedMember.loanBooks > 0){
+            return fError(res, "Member still has a loan!", 400)
+        }
+
         const deletedMember = await member.findByIdAndDelete(memberDatabaseId)
         if(!deletedMember){
             return fError(res, "Member to be deleted is not found", 200)
-        }
-
-        if(deletedMember.loanBooks > 0){
-            return fError(res, "Member still has a loan!", 400)
         }
 
         const actualMemberBarcode = homeDirectory + deleteMember.barcode;
