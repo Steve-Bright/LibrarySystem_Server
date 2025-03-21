@@ -1,5 +1,6 @@
 import mmbook from "../model/mmbook.model.js"
 import engbook from "../model/engbook.model.js"
+import deletedbook from "../model/deletedbook.model.js"
 import Loan from "../model/loan.model.js"
 import csvParser from "csv-parser"
 import JsBarcode from "jsbarcode"
@@ -7,7 +8,6 @@ import { createCanvas, createImageData } from "canvas"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
-import deletedbook from "../model/deletedbook.model.js"
 import {fMsg, fError, paginate, getWeeklyDates, getMonthlyDates} from "../utils/libby.js"
 import {kayinGyiBooks, kayinGyiBooksBarcode, kayinGyiTemp, homeDirectory, kayinGyiCSVFile, kayinGyiDirectory  } from "../utils/directories.js"
 import { mapBook } from "../utils/model.mapper.js"
@@ -218,9 +218,11 @@ export const editBook = async(req, res, next) => {
             }
         }
 
-        const sameCallNo = await bookFormat.findOne({callNo})
-        if(sameCallNo){
-            return fError(res, "There is already same call number", 400)
+        if(callNo){
+            const sameCallNo = await bookFormat.findOne({callNo})
+            if(sameCallNo){
+                return fError(res, "There is already same call number", 400)
+            }
         }
         
         let bookCover;
@@ -619,15 +621,15 @@ export const getBookDataCSV = async (req, res, next) => {
                 for(let field of requiredFields){
                     if(!data[field]){
                        if(field === "accNo"){
-                        let canvas = createCanvas();
-                        let number = await innerLatestAccNo(category, accNumberIndex)
-                        data[field] = number.accNo;
+                            let canvas = createCanvas();
+                            let number = await innerLatestAccNo(category, accNumberIndex)
+                            data[field] = number.accNo;
                        }else if(field === "callNo"){
-                        let accessionNumber = data["accNo"] || "AccNo " + callNumberIndex
-                        let initial = data["initial"] || "Intial"
-                        let classNumber = data["classNo"] || "Class"
-                        data[field] = `${accessionNumber} ${initial} ${classNumber}`
-                        callNumberIndex += 1;
+                            let accessionNumber = data["accNo"] || "AccNo " + callNumberIndex
+                            let initial = data["initial"] || "Intial"
+                            let classNumber = data["classNo"] || "Class"
+                            data[field] = `${accessionNumber} ${initial} ${classNumber}`
+                            callNumberIndex += 1;
                        }
                        else{
                         data[field] = "-"
@@ -637,6 +639,13 @@ export const getBookDataCSV = async (req, res, next) => {
                 data.bookCover = "rcs_no_image"
                 let canvas = createCanvas();
                 let storedData = `${ category +","+ data.accNo }`;
+
+                const deletedbooks = await deletedbook.find({category})
+                for(let eachDeleted of deletedbooks){
+                    if(eachDeleted.accNo === data.accNo){
+                        await deletedbook.deleteOne({accNo: data.accNo})
+                    }
+                }
 
                 let barcodeName = data.accNo + "-barcode-" + Date.now() + ".png"
                 let actualBookBarcode = kayinGyiBooksBarcode + barcodeName

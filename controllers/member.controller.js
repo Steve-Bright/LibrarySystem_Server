@@ -25,11 +25,13 @@ export const addMember = async(req, res, next) => {
         } = req.body
 
 
-
-        let duplicatePersonalId = await member.findOne({personalId})
-        if(duplicatePersonalId){
-            return fError(res, "Personal id has already been used as a library member")
+        if(personalId){
+            let duplicatePersonalId = await member.findOne({personalId})
+            if(duplicatePersonalId){
+                return fError(res, "Personal id has already been used as a library member")
+            }
         }
+
 
 
         let duplicateMemberId = await member.findOne({memberId})
@@ -77,7 +79,7 @@ export const addMember = async(req, res, next) => {
             personalId,
             memberId, 
             name, 
-            nrc: encryptedNRC, 
+            nrc, 
             gender,
             phone,
             email,
@@ -129,9 +131,11 @@ export const editMember = async(req, res, next) => {
             return fError(res, "Member is not found", 404)
         }
 
-        const samePersonalId = await member.findOne({personalId})
-        if(samePersonalId){
-            return fError(res, "There is already duplicate personal id")
+        if(personalId){
+            const samePersonalId = await member.findOne({personalId})
+            if(samePersonalId){
+                return fError(res, "There is already duplicate personal id")
+            }
         }
 
         const sameMemberId = await member.findOne({memberId})
@@ -241,11 +245,6 @@ export const getMember = async(req, res, next) => {
         if(!memberFound){
             return fError(res, "There is no such member", 400)
         }
-        // if(memberFound.nrc){
-        //     memberFound.nrc = dData(memberFound.nrc)
-        // }
-        // memberFound.currentAddress = dData(memberFound.currentAddress)
-        // memberFound.permanentAddress = dData(memberFound.permanentAddress)
 
         fMsg(res, "Member fetched successfully", memberFound, 200)
     }catch(error){
@@ -277,6 +276,12 @@ export const deleteMember = async(req, res, next) => {
         const {memberDatabaseId} = req.query;
         if(!memberDatabaseId){
             return fError(res, "Please enter the member", 400)
+        }
+
+        const tobeDeletedMember = await member.findById(memberDatabaseId)
+
+        if(tobeDeletedMember.loanBooks > 0){
+            return fError(res, "Member still has a loan!", 400)
         }
 
         const deletedMember = await member.findByIdAndDelete(memberDatabaseId)

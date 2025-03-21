@@ -15,6 +15,7 @@ const createWindow = () => {
     win = new BrowserWindow({
       width: 500,
       height: 300,
+      title: "RCS Server",
       resizable: false, 
       webPreferences: {
         nodeIntegration: true,
@@ -23,7 +24,7 @@ const createWindow = () => {
       }
     })
     win.loadFile('auth.html')
-    // win.removeMenu();
+    win.removeMenu();
     // win.webContents.openDevTools();
 }
 
@@ -96,13 +97,50 @@ ipcMain.on("createAccount", async(event, credentials) => {
             return;
         }
 
-        // User.countDocuments
+        let accountCreation = true;
+        if(credentials.role == "manager"){
+            let countResult = await User.countDocuments({role: "manager"})
+            if(countResult >= 1){
+                accountCreation = false;
+            }
+        }else if(credentials.role == "helper"){
+            let countResult = await User.countDocuments({role: "helper"})
+            if(countResult >= 3){
+                accountCreation = false;
+            }
+        }
+        // let result = await User.countDocuments({role: "manager"})
+        // console.log("counting the result " + result)
         credentials.password = encode(credentials.password)
-        let user = new User(credentials);
-        await user.save();
-        dialog.showMessageBoxSync(win, {
-            message: "Account created successfully"
-        })
+        if(accountCreation){
+            let duplicateError = false;
+            let duplicateEmail = await User.findOne({email: credentials.email})
+            if(duplicateEmail){
+                duplicateError = true;
+            }
+
+            let duplicateUsername = await User.findOne({userName: credentials.userName})
+            if(duplicateUsername){
+                duplicateError = true;
+            }
+
+            if(!duplicateError){
+                let user = new User(credentials);
+                await user.save();
+                dialog.showMessageBoxSync(win, {
+                    message: "Account created successfully"
+                })
+            }else{
+                dialog.showMessageBoxSync(win, {
+                    message: "Account with such email or username exists"
+                })
+            }
+
+        }else{
+            dialog.showMessageBoxSync(win, {
+                message: "Account cannot be created due to limitation; Manager 1 Helper 3"
+            })
+        }
         win.loadFile("createAccount.html")
     }catch(error){
         console.log("error" + error)
@@ -117,6 +155,20 @@ ipcMain.on("getAccounts", async(event) => {
     }catch(error){
         console.log("error" + error)
     }
+})
+
+ipcMain.on("deleteUser", async(event, data) => {
+    try{
+        const deletedUser = await User.findByIdAndDelete(data)
+        if(!deletedUser){
+            dialog.showMessageBoxSync(win, {
+                message: "User Not found"
+            })
+        }
+    }catch(error){
+        console.log("delete user error " + error)
+    }
+    win.loadFile("memberAccounts.html")
 })
 
 ipcMain.on("stopServer", (event) => {

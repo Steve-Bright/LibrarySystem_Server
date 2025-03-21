@@ -9,7 +9,8 @@ const authenticateFunction = {
     responseAuth: (message) => ipcRenderer.send("responseAuth", message),
     createAccount: (credentials) => ipcRenderer.send("createAccount", credentials),
     getAccounts: () => ipcRenderer.send("getAccounts") ,
-    getAccountsResponse: (event) => ipcRenderer.on("getAccountsResponse", event)
+    getAccountsResponse: (event) => ipcRenderer.on("getAccountsResponse", event),
+    deleteAccount: (userId) => ipcRenderer.send("deleteUser", userId)
 
 }
 
